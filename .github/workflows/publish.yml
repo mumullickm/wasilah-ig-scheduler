@@ -1,0 +1,37 @@
+name: Wasilah Quran-60 publisher
+on:
+  schedule:
+    # 03:00 and 13:00 UTC == 09:00 and 19:00 Asia/Dhaka (UTC+6)
+    - cron: '0 3,13 * * *'
+  workflow_dispatch: {}   # allow manual runs for testing
+
+permissions:
+  contents: write         # to commit posted.json state back
+
+concurrency:
+  group: wasilah-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Publish due reels
+        env:
+          META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+        run: node run.js
+      - name: Commit updated state
+        run: |
+          if ! git diff --quiet posted.json; then
+            git config user.name  "wasilah-bot"
+            git config user.email "bot@users.noreply.github.com"
+            git add posted.json
+            git commit -m "state: update posted reels [skip ci]"
+            git push
+          else
+            echo "no state change"
+          fi
