@@ -1,0 +1,34 @@
+name: Wasilah Reels publish
+
+# Daily tick at 15:10 UTC (09:10 PM Dhaka / 06:10 PM Saudi), just after the
+# 21:00 BD reel slot. reels.json carries the 2-on/1-off plan, so rest days
+# simply find nothing due. Self-healing.
+on:
+  schedule:
+    - cron: '10 15 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wasilah-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish-reels:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish due reels (IG + FB)
+        env:
+          META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+        run: python3 run_reels.py
+      - name: Commit updated state
+        run: |
+          git config user.name "wasilah-bot"
+          git config user.email "wasilah-bot@users.noreply.github.com"
+          git pull --rebase origin main || true
+          git add posted_reels.json
+          git diff --staged --quiet || git commit -m "state: update posted reels [skip ci]"
+          git push
