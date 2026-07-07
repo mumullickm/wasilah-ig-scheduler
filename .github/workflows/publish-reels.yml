@@ -5,7 +5,8 @@ name: Wasilah Reels publish
 # simply find nothing due. Self-healing.
 on:
   schedule:
-    - cron: '10 15 * * *'
+    - cron: '10 15 * * *'   # batch-1 reels 21:00 BD (ends 3 Aug)
+    - cron: '5 16 * * *'    # batch-2 reels 22:00 BD (from 5 Aug)
   workflow_dispatch:
 
 permissions:

@@ -78,5 +78,125 @@
  {
   "reel": "v20-ummah",
   "iso": "2026-08-03T15:00:00Z"
+ },
+ {
+  "reel": "v21-notifications",
+  "iso": "2026-08-05T16:00:00Z"
+ },
+ {
+  "reel": "v22-firstlight",
+  "iso": "2026-08-06T16:00:00Z"
+ },
+ {
+  "reel": "v27-appointment",
+  "iso": "2026-08-07T16:00:00Z"
+ },
+ {
+  "reel": "v23-eraser",
+  "iso": "2026-08-08T16:00:00Z"
+ },
+ {
+  "reel": "v24-weather",
+  "iso": "2026-08-09T16:00:00Z"
+ },
+ {
+  "reel": "v25-gift",
+  "iso": "2026-08-10T16:00:00Z"
+ },
+ {
+  "reel": "v26-rust",
+  "iso": "2026-08-11T16:00:00Z"
+ },
+ {
+  "reel": "v28-steps",
+  "iso": "2026-08-12T16:00:00Z"
+ },
+ {
+  "reel": "v29-water",
+  "iso": "2026-08-13T16:00:00Z"
+ },
+ {
+  "reel": "v41-kahf",
+  "iso": "2026-08-14T16:00:00Z"
+ },
+ {
+  "reel": "v30-plants",
+  "iso": "2026-08-15T16:00:00Z"
+ },
+ {
+  "reel": "v31-delay",
+  "iso": "2026-08-16T16:00:00Z"
+ },
+ {
+  "reel": "v32-jugular",
+  "iso": "2026-08-17T16:00:00Z"
+ },
+ {
+  "reel": "v33-gratitude-more",
+  "iso": "2026-08-18T16:00:00Z"
+ },
+ {
+  "reel": "v34-doors",
+  "iso": "2026-08-19T16:00:00Z"
+ },
+ {
+  "reel": "v35-middleprayer",
+  "iso": "2026-08-20T16:00:00Z"
+ },
+ {
+  "reel": "v36-parents",
+  "iso": "2026-08-21T16:00:00Z"
+ },
+ {
+  "reel": "v37-newcity",
+  "iso": "2026-08-22T16:00:00Z"
+ },
+ {
+  "reel": "v38-phonedown",
+  "iso": "2026-08-23T16:00:00Z"
+ },
+ {
+  "reel": "v39-goodword",
+  "iso": "2026-08-24T16:00:00Z"
+ },
+ {
+  "reel": "v40-intention",
+  "iso": "2026-08-25T16:00:00Z"
+ },
+ {
+  "reel": "v42-sleep",
+  "iso": "2026-08-26T16:00:00Z"
+ },
+ {
+  "reel": "v43-hardship",
+  "iso": "2026-08-27T16:00:00Z"
+ },
+ {
+  "reel": "v44-sincerity",
+  "iso": "2026-08-28T16:00:00Z"
+ },
+ {
+  "reel": "v45-silence",
+  "iso": "2026-08-29T16:00:00Z"
+ },
+ {
+  "reel": "v46-brotherhood",
+  "iso": "2026-08-30T16:00:00Z"
+ },
+ {
+  "reel": "v47-nearest",
+  "iso": "2026-08-31T16:00:00Z"
+ },
+ {
+  "reel": "v48-anxiety",
+  "iso": "2026-09-01T16:00:00Z"
+ },
+ {
+  "reel": "v49-rain",
+  "iso": "2026-09-02T16:00:00Z"
+ },
+ {
+  "reel": "v50-legacy",
+  "iso": "2026-09-03T16:00:00Z"
  }
 ]
