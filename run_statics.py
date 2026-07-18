@@ -1,4 +1,5 @@
 """Wasilah statics auto-publisher: IG feed + FB photo, 2/day (01:30 + 16:00 UTC). Posts anything due-but-unposted, so late crons self-heal. Secret: META_PAGE_TOKEN."""
+import re
 import datetime, json, os, time, urllib.error, urllib.parse, urllib.request
 
 GRAPH = "https://graph.facebook.com/v21.0"
@@ -32,7 +33,13 @@ STATIC_BASE = CFG["staticBase"]
 CAPS = json.load(open("static_captions.json"))
 
 
-def image_url(sid): return f"{STATIC_BASE}/{sid}.jpg"
+def asset_id(sid):
+    # showcase posts repeat one creative across cycles: sh01c3 -> sh01
+    m = re.fullmatch(r"(sh\d+)c\d+", sid)
+    return m.group(1) if m else sid
+
+
+def image_url(sid): return f"{STATIC_BASE}/{asset_id(sid)}.jpg"
 
 
 def publish_ig_image(ig, sid):

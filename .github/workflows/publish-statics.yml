@@ -8,6 +8,8 @@ on:
     - cron: '40 1 * * *'
     - cron: '10 16 * * *'   # batch-1 PM 22:00 BD (ends 4 Aug)
     - cron: '5 7 * * *'     # batch-2 midday 13:00 BD (from 5 Aug)
+    - cron: '5 15 * * *'    # showcase 21:00 BD daily (from 18 Jul)
+    - cron: '35 15 * * *'   # showcase 21:30 BD on batch-1 reel days (to 3 Aug)
   workflow_dispatch:
 
 permissions:
