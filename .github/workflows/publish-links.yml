@@ -1,0 +1,35 @@
+name: Wasilah blog links publish
+
+# Facebook-only link posts pointing at wasilah.site articles. 20:00 BD
+# (14:00 UTC) on the days listed in links.json, ticked a few minutes after so
+# a due post is never missed by a slow runner. 20:00 rather than 21:00 because
+# the showcase statics and the reels already occupy 21:00-21:10 BD.
+# Self-heals: any due-but-unposted link goes out on the next tick.
+on:
+  schedule:
+    - cron: '5 14 * * 1,4'   # Mon + Thu, 20:05 BD
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wasilah-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish due blog links (FB)
+        env:
+          META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+        run: python3 run_links.py
+      - name: Commit state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add posted_links.json
+          git diff --staged --quiet || git commit -m "state: update posted links [skip ci]"
+          git push
