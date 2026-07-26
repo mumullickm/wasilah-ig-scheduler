@@ -1,13 +1,16 @@
 name: Wasilah blog links publish
 
-# Facebook-only link posts pointing at wasilah.site articles. 20:00 BD
-# (14:00 UTC) on the days listed in links.json, ticked a few minutes after so
-# a due post is never missed by a slow runner. 20:00 rather than 21:00 because
-# the showcase statics and the reels already occupy 21:00-21:10 BD.
-# Self-heals: any due-but-unposted link goes out on the next tick.
+# Facebook-only link posts pointing at wasilah.site articles, published at
+# 21:00 BD on the dates in links.json.
+#
+# Timing does NOT depend on this cron. run_links.py hands each post to
+# Facebook's own scheduler (scheduled_publish_time), so Facebook publishes at
+# the exact minute and the queue is visible in Business Suite's Scheduled tab.
+# This daily tick is only a safety net: it registers anything in links.json
+# that has not been handed over yet, so an added or edited entry still lands.
 on:
   schedule:
-    - cron: '5 14 * * 1,4'   # Mon + Thu, 20:05 BD
+    - cron: '0 3 * * *'   # 09:00 BD daily, well ahead of any 21:00 slot
   workflow_dispatch:
 
 permissions:
