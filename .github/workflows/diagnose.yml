@@ -1,0 +1,19 @@
+name: Hirra page diagnose
+
+# Manual, read-only. Dumps what the Page timeline actually contains so we can
+# tell "public by permalink" apart from "visible on the Page". Commits nothing.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dump page feed
+        env:
+          META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+        run: python3 diagnose_page_feed.py
