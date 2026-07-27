@@ -1,5 +1,5 @@
 """Wasilah reels auto-publisher: IG Reels + FB Reels, daily slot 15:00 UTC (2-on/1-off per reels.json). Self-healing. Secret: META_PAGE_TOKEN."""
-import datetime, json, os, time, urllib.error, urllib.parse, urllib.request
+import datetime, json, os, re, time, urllib.error, urllib.parse, urllib.request
 
 GRAPH = "https://graph.facebook.com/v21.0"
 TOKEN = os.environ["META_PAGE_TOKEN"]
@@ -32,7 +32,13 @@ VIDEO_BASE = CFG["videoBase"]
 CAPS = json.load(open("reel_captions.json"))
 
 
-def video_url(reel): return f"{VIDEO_BASE}/{reel}.mp4"
+def asset_id(rid):
+    # matches run_statics.asset_id: a cycle suffix reuses the same file
+    m = re.fullmatch(r"(.+?)c\d+", rid)
+    return m.group(1) if m else rid
+
+
+def video_url(reel): return f"{VIDEO_BASE}/{asset_id(reel)}.mp4"
 
 
 def publish_ig_reel(ig, reel):

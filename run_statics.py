@@ -34,8 +34,10 @@ CAPS = json.load(open("static_captions.json"))
 
 
 def asset_id(sid):
-    # showcase posts repeat one creative across cycles: sh01c3 -> sh01
-    m = re.fullmatch(r"(sh\d+)c\d+", sid)
+    # a repeat appends a cycle suffix and reuses the same creative:
+    #   sh01c3 -> sh01      (showcase, original case)
+    #   d07-2c2 -> d07-2    (45-day cycle, second pass)
+    m = re.fullmatch(r"(.+?)c\d+", sid)
     return m.group(1) if m else sid
 
 
