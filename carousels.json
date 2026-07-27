@@ -1,0 +1,674 @@
+[
+ {
+  "carousel": "car-d01",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d01-1",
+   "d01-2",
+   "d01-3",
+   "d01-4"
+  ],
+  "iso": "2026-09-13T16:00:00Z"
+ },
+ {
+  "carousel": "car-d03",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d03-1",
+   "d03-2",
+   "d03-3",
+   "d03-4"
+  ],
+  "iso": "2026-09-15T16:00:00Z"
+ },
+ {
+  "carousel": "car-d05",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d05-1",
+   "d05-2",
+   "d05-3",
+   "d05-4"
+  ],
+  "iso": "2026-09-17T16:00:00Z"
+ },
+ {
+  "carousel": "car-d07",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d07-1",
+   "d07-2",
+   "d07-3",
+   "d07-4"
+  ],
+  "iso": "2026-09-19T16:00:00Z"
+ },
+ {
+  "carousel": "car-d09",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d09-1",
+   "d09-2",
+   "d09-3",
+   "d09-4"
+  ],
+  "iso": "2026-09-21T16:00:00Z"
+ },
+ {
+  "carousel": "car-d11",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d11-1",
+   "d11-2",
+   "d11-3",
+   "d11-4"
+  ],
+  "iso": "2026-09-23T16:00:00Z"
+ },
+ {
+  "carousel": "car-d13",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d13-1",
+   "d13-2",
+   "d13-3",
+   "d13-4"
+  ],
+  "iso": "2026-09-25T16:00:00Z"
+ },
+ {
+  "carousel": "jum-d14",
+  "platform": "ig",
+  "kind": "video",
+  "slides": [
+   "d07",
+   "d09",
+   "d11",
+   "d13"
+  ],
+  "iso": "2026-09-25T15:45:00Z"
+ },
+ {
+  "carousel": "car-d15",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d15-1",
+   "d15-2",
+   "d15-3",
+   "d15-4"
+  ],
+  "iso": "2026-09-27T16:00:00Z"
+ },
+ {
+  "carousel": "car-d17",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d17-1",
+   "d17-2",
+   "d17-3",
+   "d17-4"
+  ],
+  "iso": "2026-09-29T16:00:00Z"
+ },
+ {
+  "carousel": "car-d19",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d19-1",
+   "d19-2",
+   "d19-3",
+   "d19-4"
+  ],
+  "iso": "2026-10-01T16:00:00Z"
+ },
+ {
+  "carousel": "jum-d21",
+  "platform": "ig",
+  "kind": "video",
+  "slides": [
+   "d14",
+   "d16",
+   "d18",
+   "d20"
+  ],
+  "iso": "2026-10-02T15:45:00Z"
+ },
+ {
+  "carousel": "car-d21",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d21-1",
+   "d21-2",
+   "d21-3",
+   "d21-4"
+  ],
+  "iso": "2026-10-03T16:00:00Z"
+ },
+ {
+  "carousel": "car-d23",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d23-1",
+   "d23-2",
+   "d23-3",
+   "d23-4"
+  ],
+  "iso": "2026-10-05T16:00:00Z"
+ },
+ {
+  "carousel": "car-d25",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d25-1",
+   "d25-2",
+   "d25-3",
+   "d25-4"
+  ],
+  "iso": "2026-10-07T16:00:00Z"
+ },
+ {
+  "carousel": "car-d27",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d27-1",
+   "d27-2",
+   "d27-3",
+   "d27-4"
+  ],
+  "iso": "2026-10-09T16:00:00Z"
+ },
+ {
+  "carousel": "jum-d28",
+  "platform": "ig",
+  "kind": "video",
+  "slides": [
+   "d21",
+   "d23",
+   "d25",
+   "d27"
+  ],
+  "iso": "2026-10-09T15:45:00Z"
+ },
+ {
+  "carousel": "car-d29",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d29-1",
+   "d29-2",
+   "d29-3",
+   "d29-4"
+  ],
+  "iso": "2026-10-11T16:00:00Z"
+ },
+ {
+  "carousel": "car-d31",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d31-1",
+   "d31-2",
+   "d31-3",
+   "d31-4"
+  ],
+  "iso": "2026-10-13T16:00:00Z"
+ },
+ {
+  "carousel": "car-d33",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d33-1",
+   "d33-2",
+   "d33-3",
+   "d33-4"
+  ],
+  "iso": "2026-10-15T16:00:00Z"
+ },
+ {
+  "carousel": "jum-d35",
+  "platform": "ig",
+  "kind": "video",
+  "slides": [
+   "d28",
+   "d30",
+   "d32",
+   "d34"
+  ],
+  "iso": "2026-10-16T15:45:00Z"
+ },
+ {
+  "carousel": "car-d35",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d35-1",
+   "d35-2",
+   "d35-3",
+   "d35-4"
+  ],
+  "iso": "2026-10-17T16:00:00Z"
+ },
+ {
+  "carousel": "car-d37",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d37-1",
+   "d37-2",
+   "d37-3",
+   "d37-4"
+  ],
+  "iso": "2026-10-19T16:00:00Z"
+ },
+ {
+  "carousel": "car-d39",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d39-1",
+   "d39-2",
+   "d39-3",
+   "d39-4"
+  ],
+  "iso": "2026-10-21T16:00:00Z"
+ },
+ {
+  "carousel": "car-d41",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d41-1",
+   "d41-2",
+   "d41-3",
+   "d41-4"
+  ],
+  "iso": "2026-10-23T16:00:00Z"
+ },
+ {
+  "carousel": "jum-d42",
+  "platform": "ig",
+  "kind": "video",
+  "slides": [
+   "d35",
+   "d37",
+   "d39",
+   "d41"
+  ],
+  "iso": "2026-10-23T15:45:00Z"
+ },
+ {
+  "carousel": "car-d43",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d43-1",
+   "d43-2",
+   "d43-3",
+   "d43-4"
+  ],
+  "iso": "2026-10-25T16:00:00Z"
+ },
+ {
+  "carousel": "car-d45",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d45-1",
+   "d45-2",
+   "d45-3",
+   "d45-4"
+  ],
+  "iso": "2026-10-27T16:00:00Z"
+ },
+ {
+  "carousel": "car-d02c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d02-1c2",
+   "d02-2c2",
+   "d02-3c2",
+   "d02-4c2"
+  ],
+  "iso": "2026-10-29T16:00:00Z"
+ },
+ {
+  "carousel": "car-d04c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d04-1c2",
+   "d04-2c2",
+   "d04-3c2",
+   "d04-4c2"
+  ],
+  "iso": "2026-10-31T16:00:00Z"
+ },
+ {
+  "carousel": "car-d06c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d06-1c2",
+   "d06-2c2",
+   "d06-3c2",
+   "d06-4c2"
+  ],
+  "iso": "2026-11-02T16:00:00Z"
+ },
+ {
+  "carousel": "jum-d07c2",
+  "platform": "ig",
+  "kind": "video",
+  "slides": [
+   "d45",
+   "d02c2",
+   "d04c2",
+   "d06c2"
+  ],
+  "iso": "2026-11-02T15:45:00Z"
+ },
+ {
+  "carousel": "car-d08c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d08-1c2",
+   "d08-2c2",
+   "d08-3c2",
+   "d08-4c2"
+  ],
+  "iso": "2026-11-04T16:00:00Z"
+ },
+ {
+  "carousel": "car-d10c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d10-1c2",
+   "d10-2c2",
+   "d10-3c2",
+   "d10-4c2"
+  ],
+  "iso": "2026-11-06T16:00:00Z"
+ },
+ {
+  "carousel": "car-d12c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d12-1c2",
+   "d12-2c2",
+   "d12-3c2",
+   "d12-4c2"
+  ],
+  "iso": "2026-11-08T16:00:00Z"
+ },
+ {
+  "carousel": "jum-d14c2",
+  "platform": "ig",
+  "kind": "video",
+  "slides": [
+   "d07c2",
+   "d09c2",
+   "d11c2",
+   "d13c2"
+  ],
+  "iso": "2026-11-09T15:45:00Z"
+ },
+ {
+  "carousel": "car-d14c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d14-1c2",
+   "d14-2c2",
+   "d14-3c2",
+   "d14-4c2"
+  ],
+  "iso": "2026-11-10T16:00:00Z"
+ },
+ {
+  "carousel": "car-d16c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d16-1c2",
+   "d16-2c2",
+   "d16-3c2",
+   "d16-4c2"
+  ],
+  "iso": "2026-11-12T16:00:00Z"
+ },
+ {
+  "carousel": "car-d18c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d18-1c2",
+   "d18-2c2",
+   "d18-3c2",
+   "d18-4c2"
+  ],
+  "iso": "2026-11-14T16:00:00Z"
+ },
+ {
+  "carousel": "car-d20c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d20-1c2",
+   "d20-2c2",
+   "d20-3c2",
+   "d20-4c2"
+  ],
+  "iso": "2026-11-16T16:00:00Z"
+ },
+ {
+  "carousel": "jum-d21c2",
+  "platform": "ig",
+  "kind": "video",
+  "slides": [
+   "d14c2",
+   "d16c2",
+   "d18c2",
+   "d20c2"
+  ],
+  "iso": "2026-11-16T15:45:00Z"
+ },
+ {
+  "carousel": "car-d22c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d22-1c2",
+   "d22-2c2",
+   "d22-3c2",
+   "d22-4c2"
+  ],
+  "iso": "2026-11-18T16:00:00Z"
+ },
+ {
+  "carousel": "car-d24c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d24-1c2",
+   "d24-2c2",
+   "d24-3c2",
+   "d24-4c2"
+  ],
+  "iso": "2026-11-20T16:00:00Z"
+ },
+ {
+  "carousel": "car-d26c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d26-1c2",
+   "d26-2c2",
+   "d26-3c2",
+   "d26-4c2"
+  ],
+  "iso": "2026-11-22T16:00:00Z"
+ },
+ {
+  "carousel": "jum-d28c2",
+  "platform": "ig",
+  "kind": "video",
+  "slides": [
+   "d21c2",
+   "d23c2",
+   "d25c2",
+   "d27c2"
+  ],
+  "iso": "2026-11-23T15:45:00Z"
+ },
+ {
+  "carousel": "car-d28c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d28-1c2",
+   "d28-2c2",
+   "d28-3c2",
+   "d28-4c2"
+  ],
+  "iso": "2026-11-24T16:00:00Z"
+ },
+ {
+  "carousel": "car-d30c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d30-1c2",
+   "d30-2c2",
+   "d30-3c2",
+   "d30-4c2"
+  ],
+  "iso": "2026-11-26T16:00:00Z"
+ },
+ {
+  "carousel": "car-d32c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d32-1c2",
+   "d32-2c2",
+   "d32-3c2",
+   "d32-4c2"
+  ],
+  "iso": "2026-11-28T16:00:00Z"
+ },
+ {
+  "carousel": "car-d34c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d34-1c2",
+   "d34-2c2",
+   "d34-3c2",
+   "d34-4c2"
+  ],
+  "iso": "2026-11-30T16:00:00Z"
+ },
+ {
+  "carousel": "jum-d35c2",
+  "platform": "ig",
+  "kind": "video",
+  "slides": [
+   "d28c2",
+   "d30c2",
+   "d32c2",
+   "d34c2"
+  ],
+  "iso": "2026-11-30T15:45:00Z"
+ },
+ {
+  "carousel": "car-d36c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d36-1c2",
+   "d36-2c2",
+   "d36-3c2",
+   "d36-4c2"
+  ],
+  "iso": "2026-12-02T16:00:00Z"
+ },
+ {
+  "carousel": "car-d38c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d38-1c2",
+   "d38-2c2",
+   "d38-3c2",
+   "d38-4c2"
+  ],
+  "iso": "2026-12-04T16:00:00Z"
+ },
+ {
+  "carousel": "car-d40c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d40-1c2",
+   "d40-2c2",
+   "d40-3c2",
+   "d40-4c2"
+  ],
+  "iso": "2026-12-06T16:00:00Z"
+ },
+ {
+  "carousel": "jum-d42c2",
+  "platform": "ig",
+  "kind": "video",
+  "slides": [
+   "d35c2",
+   "d37c2",
+   "d39c2",
+   "d41c2"
+  ],
+  "iso": "2026-12-07T15:45:00Z"
+ },
+ {
+  "carousel": "car-d42c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d42-1c2",
+   "d42-2c2",
+   "d42-3c2",
+   "d42-4c2"
+  ],
+  "iso": "2026-12-08T16:00:00Z"
+ },
+ {
+  "carousel": "car-d44c2",
+  "platform": "ig",
+  "kind": "image",
+  "slides": [
+   "d44-1c2",
+   "d44-2c2",
+   "d44-3c2",
+   "d44-4c2"
+  ],
+  "iso": "2026-12-10T16:00:00Z"
+ }
+]
