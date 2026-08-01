@@ -18,7 +18,7 @@ UPLOAD_URL = ("https://www.googleapis.com/upload/youtube/v3/videos"
 CFG = json.load(open("config.json"))
 CAPS = json.load(open("reel_captions.json"))
 VIDEO_BASE = CFG["videoBase"]
-MAX_PER_RUN = int(os.environ.get("YT_MAX_PER_RUN", "5"))
+MAX_PER_RUN = int(os.environ.get("YT_MAX_PER_RUN", "6"))
 CATEGORY_ID = "22"          # People & Blogs
 PRIVACY = os.environ.get("YT_PRIVACY", "public")
 
@@ -118,14 +118,30 @@ def main():
     state = json.load(open("posted_youtube.json")) if os.path.exists("posted_youtube.json") else {}
     now = datetime.datetime.now(datetime.timezone.utc)
 
-    due = [r for r in reels
-           if datetime.datetime.fromisoformat(r["iso"].replace("Z", "+00:00")) <= now
-           and not state.get(r["reel"])]
+    # Ledger is keyed by ASSET, not by queue entry. reels.json recycles a file to
+    # a later date (v01-pausesc2 is the same mp4 as v01-pauses); IG and FB happily
+    # repost it, but a duplicate upload on YouTube competes with the original and
+    # reads as spam. So each distinct video goes up exactly once, ever.
+    # DRAIN=1 ignores the reels.json date gate and works through the whole back
+    # catalogue at MAX_PER_RUN a day. Set DRAIN=0 once caught up, and YouTube goes
+    # back to posting the same evening as IG and FB.
+    drain = os.environ.get("YT_DRAIN", "1") == "1"
+    due, seen = [], set()
+    for r in reels:
+        if not drain and datetime.datetime.fromisoformat(r["iso"].replace("Z", "+00:00")) > now:
+            continue
+        aid = asset_id(r["reel"])
+        if aid in state or aid in seen:
+            continue
+        seen.add(aid)
+        due.append(r)
     if not due:
         print(f"[{stamp}] no YouTube uploads due")
         return
 
     batch, deferred = due[:MAX_PER_RUN], due[MAX_PER_RUN:]
+    print(f"[{stamp}] mode={'DRAIN (ignoring schedule)' if drain else 'scheduled'}, "
+          f"{len(due)} distinct assets outstanding")
     if deferred:
         print(f"[{stamp}] quota cap: uploading {len(batch)}, deferring "
               f"{len(deferred)} to later runs ({', '.join(r['reel'] for r in deferred[:8])}"
@@ -144,7 +160,7 @@ def main():
             continue
         ok, info = upload(token, reel, blob)
         if ok:
-            state[reel] = info
+            state[asset_id(reel)] = info
             print(f"[{stamp}] YT {reel}: published https://youtu.be/{info}")
         else:
             print(f"[{stamp}] YT {reel}: {info}")
