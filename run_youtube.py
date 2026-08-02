@@ -17,7 +17,13 @@ UPLOAD_URL = ("https://www.googleapis.com/upload/youtube/v3/videos"
               "?uploadType=resumable&part=snippet,status")
 CFG = json.load(open("config.json"))
 CAPS = json.load(open("reel_captions.json"))
-VIDEO_BASE = CFG["videoBase"]
+# Shorts wants 9:16. `videoBase` holds the 1080x1350 feed masters that Instagram
+# and Facebook publish, and pointing YouTube at those put the first 7 uploads on
+# the channel at 4:5, letterboxed instead of full screen. Verified against the
+# Data API on 2026-08-02, not inferred. So YouTube reads its own base and the
+# feed publishers are left alone. Falls back to the 4:5 base only if the 9:16
+# one is absent, which is a visible-but-working degrade rather than a crash.
+VIDEO_BASE = CFG.get("videoBase916") or CFG["videoBase"]
 MAX_PER_RUN = int(os.environ.get("YT_MAX_PER_RUN", "6"))
 CATEGORY_ID = "22"          # People & Blogs
 PRIVACY = os.environ.get("YT_PRIVACY", "public")
