@@ -33,6 +33,12 @@ jobs:
           git config user.name "wasilah-bot"
           git config user.email "wasilah-bot@users.noreply.github.com"
           git pull --rebase origin main || true
-          git add posted_carousels.json
+          # The ledger does not exist until the first carousel actually posts,
+          # and the first one is not due until 13 Sep 2026. A bare `git add` on
+          # a missing path exits 128 under `set -e`, so every run until then
+          # went red on a job that had correctly done nothing. A publisher that
+          # cries wolf twice a day is worse than no publisher, because a real
+          # failure hides in the noise.
+          git add posted_carousels.json 2>/dev/null || true
           git diff --staged --quiet || git commit -m "state: update posted carousels [skip ci]"
           git push
