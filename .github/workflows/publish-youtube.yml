@@ -7,6 +7,11 @@ name: Wasilah YouTube publish
 # Runs ONCE a day on purpose: a video insert costs 1600 quota units against a
 # 10,000/day cap, so YT_MAX_PER_RUN=6 (9600 units) is the hard ceiling. There is
 # no room for a second daily run, and no room for a 7th upload.
+#
+# The scheduled cap reads the repo variable YT_MAX_PER_RUN so it can be ramped
+# without editing this file. It is deliberately set low while the reinstated
+# account settles, because a burst of API uploads is what got it suspended on
+# 1 Aug 2026. Raise it with:  gh variable set YT_MAX_PER_RUN --body 6
 on:
   schedule:
     - cron: '20 15 * * *'
@@ -34,7 +39,7 @@ jobs:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
-          YT_MAX_PER_RUN: ${{ github.event.inputs.max_per_run || '6' }}
+          YT_MAX_PER_RUN: ${{ github.event.inputs.max_per_run || vars.YT_MAX_PER_RUN || '6' }}
           YT_DRAIN: ${{ vars.YT_DRAIN || '1' }}
         run: python3 run_youtube.py
       - name: Commit updated state
