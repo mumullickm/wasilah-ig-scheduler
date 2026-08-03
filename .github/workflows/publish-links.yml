@@ -24,7 +24,12 @@ jobs:
   publish-links:
     runs-on: ubuntu-latest
     steps:
+      # `ref: main` resolves the branch at checkout time. A bare checkout pins
+      # to the SHA from when the run was created, so a ledger commit landing in
+      # between is invisible and the publisher re-posts what it already sent.
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Publish due blog links (FB)
         env:
           META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}

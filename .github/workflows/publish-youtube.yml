@@ -59,7 +59,16 @@ jobs:
   publish-youtube:
     runs-on: ubuntu-latest
     steps:
+      # `ref: main` is load-bearing, not tidiness. A bare checkout takes
+      # github.sha, which for a scheduled run is the SHA of main at the moment
+      # the run was CREATED, not when it starts. On 2026-08-03 a run created at
+      # 17:25:20 checked out at 17:26:04 and still got the tree from before the
+      # 17:25:20 ledger commit, so it saw an already-published video as
+      # outstanding and uploaded a second copy of it. Resolving the branch at
+      # checkout time is what makes the ledger authoritative.
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Publish due reels to YouTube
         env:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
@@ -72,7 +81,25 @@ jobs:
         run: |
           git config user.name "wasilah-bot"
           git config user.email "wasilah-bot@users.noreply.github.com"
-          git pull --rebase origin main || true
-          git add posted_youtube.json
-          git diff --staged --quiet || git commit -m "state: update posted youtube [skip ci]"
-          git push
+          # Commit BEFORE rebasing. `git pull --rebase` refuses to run against a
+          # dirty tree, and run_youtube.py has just written the ledger, so the
+          # pull failed on every single run and `|| true` swallowed it. The
+          # rebase exists to let this land when a sibling publisher pushed after
+          # checkout; ordered this way round it never protected anything.
+          git add posted_youtube.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "no state change"
+            exit 0
+          fi
+          git commit -m "state: update posted youtube [skip ci]"
+          # A lost push here does not just skip a commit. The upload already
+          # happened, so an unrecorded ledger makes the next run publish the
+          # same video again, and a duplicate competes with the original and
+          # reads as spam. Retry rather than drop it.
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            echo "ledger push attempt $i failed, retrying"
+            sleep 5
+          done
+          echo "ledger push failed after 3 attempts; posted_youtube.json is NOT saved" >&2
+          exit 1

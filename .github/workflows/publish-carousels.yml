@@ -23,7 +23,12 @@ jobs:
   publish-carousels:
     runs-on: ubuntu-latest
     steps:
+      # `ref: main` resolves the branch at checkout time. A bare checkout pins
+      # to the SHA from when the run was created, so a ledger commit landing in
+      # between is invisible and the publisher re-posts what it already sent.
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Publish due carousels (IG only)
         env:
           META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
@@ -32,7 +37,11 @@ jobs:
         run: |
           git config user.name "wasilah-bot"
           git config user.email "wasilah-bot@users.noreply.github.com"
-          git pull --rebase origin main || true
+          # Commit BEFORE rebasing. `git pull --rebase` refuses to run against a
+          # dirty tree, and the publisher has just written the ledger, so the
+          # pull failed on every run and `|| true` swallowed it. The rebase is
+          # what lets this land when a sibling publisher pushed after checkout.
+          #
           # The ledger does not exist until the first carousel actually posts,
           # and the first one is not due until 13 Sep 2026. A bare `git add` on
           # a missing path exits 128 under `set -e`, so every run until then
@@ -40,5 +49,17 @@ jobs:
           # cries wolf twice a day is worse than no publisher, because a real
           # failure hides in the noise.
           git add posted_carousels.json 2>/dev/null || true
-          git diff --staged --quiet || git commit -m "state: update posted carousels [skip ci]"
-          git push
+          if git diff --staged --quiet; then
+            echo "no state change"
+            exit 0
+          fi
+          git commit -m "state: update posted carousels [skip ci]"
+          # The post already went out. An unrecorded ledger makes the next run
+          # publish the same carousel again, so retry rather than drop it.
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            echo "ledger push attempt $i failed, retrying"
+            sleep 5
+          done
+          echo "ledger push failed after 3 attempts; posted_carousels.json is NOT saved" >&2
+          exit 1

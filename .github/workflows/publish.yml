@@ -16,7 +16,12 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
+      # `ref: main` resolves the branch at checkout time. A bare checkout pins
+      # to the SHA from when the run was created, so a ledger commit landing in
+      # between is invisible and the publisher re-posts what it already sent.
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -26,12 +31,22 @@ jobs:
         run: node run.js
       - name: Commit updated state
         run: |
-          if ! git diff --quiet posted.json; then
-            git config user.name  "wasilah-bot"
-            git config user.email "bot@users.noreply.github.com"
-            git add posted.json
-            git commit -m "state: update posted reels [skip ci]"
-            git push
-          else
+          if git diff --quiet posted.json; then
             echo "no state change"
+            exit 0
           fi
+          git config user.name  "wasilah-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add posted.json
+          git commit -m "state: update posted reels [skip ci]"
+          # This step had no rebase at all, so any sibling publisher pushing
+          # after checkout left a non-fast-forward and the push was simply
+          # rejected. The post already went out, so an unrecorded ledger makes
+          # the next run publish the same thing again. Rebase, and retry.
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            echo "ledger push attempt $i failed, retrying"
+            sleep 5
+          done
+          echo "ledger push failed after 3 attempts; posted.json is NOT saved" >&2
+          exit 1

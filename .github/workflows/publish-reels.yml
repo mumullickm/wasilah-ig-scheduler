@@ -20,7 +20,12 @@ jobs:
   publish-reels:
     runs-on: ubuntu-latest
     steps:
+      # `ref: main` resolves the branch at checkout time. A bare checkout pins
+      # to the SHA from when the run was created, so a ledger commit landing in
+      # between is invisible and the publisher re-posts what it already sent.
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - name: Publish due reels (IG + FB)
         env:
           META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
@@ -29,7 +34,22 @@ jobs:
         run: |
           git config user.name "wasilah-bot"
           git config user.email "wasilah-bot@users.noreply.github.com"
-          git pull --rebase origin main || true
-          git add posted_reels.json
-          git diff --staged --quiet || git commit -m "state: update posted reels [skip ci]"
-          git push
+          # Commit BEFORE rebasing. `git pull --rebase` refuses to run against a
+          # dirty tree, and the publisher has just written the ledger, so the
+          # pull failed on every run and `|| true` swallowed it. The rebase is
+          # what lets this land when a sibling publisher pushed after checkout.
+          git add posted_reels.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "no state change"
+            exit 0
+          fi
+          git commit -m "state: update posted reels [skip ci]"
+          # The post already went out. An unrecorded ledger makes the next run
+          # publish the same reel again, so retry rather than drop it.
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            echo "ledger push attempt $i failed, retrying"
+            sleep 5
+          done
+          echo "ledger push failed after 3 attempts; posted_reels.json is NOT saved" >&2
+          exit 1
