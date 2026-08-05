@@ -26,7 +26,7 @@ Reads the same home dotfiles as mint_tiktok_token.py:
     ~/.wasilah_tiktok_client_secret
     ~/.wasilah_tiktok_refresh_token
 """
-import http.server, json, os, socketserver, sys, urllib.parse, urllib.request
+import http.server, json, os, socketserver, sys, urllib.error, urllib.parse, urllib.request
 
 PORT = 8731
 API = "https://open.tiktokapis.com/v2"
@@ -35,20 +35,26 @@ QUEUE = "tiktok.json"
 
 
 def dotfile(name):
-    """Raise, never sys.exit.
+    """Prefer the sandbox credentials, fall back to production. Raise, never sys.exit.
 
-    This is called from inside request handlers. SystemExit there kills the
-    connection with no response, so the browser shows a bare network failure and
-    the cause is invisible — which, mid-recording, looks like the integration
-    is broken. Raising surfaces the real reason as JSON in the page.
+    Sandbox first because that is the only environment that can authorise before the
+    audit passes: production has no redirect URI until the app is approved, so its
+    token cannot be minted yet.
+
+    Raising rather than exiting matters because this runs inside request handlers.
+    SystemExit there kills the connection with no response, so the browser shows a
+    bare network failure and the cause is invisible — mid-recording that looks like
+    the integration is broken. Raising surfaces the real reason as JSON in the page.
     """
-    p = os.path.expanduser(f"~/.wasilah_tiktok_{name}")
-    if not os.path.exists(p):
-        raise RuntimeError(f"missing {p} — see mint_tiktok_token.py for how these are created")
-    v = open(p).read().strip()
-    if not v:
-        raise RuntimeError(f"{p} is empty")
-    return v
+    for prefix in ("sandbox_", ""):
+        p = os.path.expanduser(f"~/.wasilah_tiktok_{prefix}{name}")
+        if os.path.exists(p):
+            v = open(p).read().strip()
+            if v:
+                return v
+    raise RuntimeError(
+        f"no ~/.wasilah_tiktok_sandbox_{name} or ~/.wasilah_tiktok_{name} — "
+        "see mint_tiktok_token.py for how these are created")
 
 
 def access_token():
@@ -65,6 +71,12 @@ def access_token():
     if "access_token" not in d:
         raise RuntimeError(f"token refresh failed: {d}")
     return d["access_token"]
+
+
+def tt_get(path, token, timeout=60):
+    req = urllib.request.Request(
+        f"{API}{path}", headers={"Authorization": f"Bearer {token}"}, method="GET")
+    return json.loads(urllib.request.urlopen(req, timeout=timeout).read())
 
 
 def tt_post(path, payload, token, timeout=120):
@@ -129,24 +141,39 @@ let creator = null
 const MUSIC = 'By posting, you agree to TikTok\\u2019s Music Usage Confirmation.'
 const BRANDED = 'By posting, you agree to TikTok\\u2019s Branded Content Policy and Music Usage Confirmation.'
 
+let inboxMode = false   // set from /api/creator; true while only video.upload is granted
+
 function refresh(){
   const d = $('disclose').checked
   $('dsub').style.display = d ? 'block' : 'none'
   $('dtext').textContent = $('branded').checked ? BRANDED : MUSIC
-  // TikTok requires a privacy choice, and if disclosure is on, at least one kind.
-  const ok = $('privacy').value && (!d || $('yourbrand').checked || $('branded').checked)
+  // A privacy choice is required for direct posting only. In inbox mode TikTok has
+  // no privacy_level_options to offer, because the creator picks those settings in
+  // the TikTok app when they open the draft — so requiring one here would leave the
+  // button permanently disabled.
+  const needPrivacy = !inboxMode
+  const ok = (!needPrivacy || $('privacy').value) && (!d || $('yourbrand').checked || $('branded').checked)
   $('post').disabled = !ok
   // Branded content cannot be private.
   const priv = $('privacy')
-  if ($('branded').checked && priv.value === 'SELF_ONLY') { priv.value = ''; $('post').disabled = true }
+  if (needPrivacy && $('branded').checked && priv.value === 'SELF_ONLY') { priv.value = ''; $('post').disabled = true }
 }
 ;['privacy','disclose','yourbrand','branded'].forEach(i => $(i).addEventListener('change', refresh))
 
 fetch('/api/creator').then(r => r.json()).then(d => {
   if (d.error) { $('who').textContent = 'Error: ' + d.error; return }
   creator = d
+  inboxMode = !d.direct
   $('who').innerHTML = (d.avatar ? '<img src="'+d.avatar+'">' : '') +
     '<div><b>' + d.nickname + '</b><br><span class=note>Posting to this TikTok account</span></div>'
+  if (inboxMode) {
+    // Hide the selector rather than show an empty dropdown, and say plainly where
+    // the video lands, so the flow on screen matches what actually happens.
+    $('privacy').closest('fieldset').style.display = 'none'
+    $('post').textContent = 'Send to TikTok'
+    document.querySelector('.sub').textContent =
+      'Send a Wasilah video to your TikTok drafts. You choose who can view it when you post it in the TikTok app.'
+  }
   d.privacy_options.forEach(o => $('privacy').add(new Option(
     {PUBLIC_TO_EVERYONE:'Everyone', MUTUAL_FOLLOW_FRIENDS:'Friends', FOLLOWER_OF_CREATOR:'Followers', SELF_ONLY:'Only me'}[o]||o, o)))
   // Creator-level switches: if TikTok says they are off, the box is off and locked.
@@ -191,12 +218,30 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if self.path == "/api/creator":
             try:
                 token = access_token()
-                d = tt_post("/post/publish/creator_info/query/", {}, token).get("data") or {}
                 queue = json.load(open(QUEUE, encoding="utf-8"))
+                d = {}
+                try:
+                    d = tt_post("/post/publish/creator_info/query/", {}, token).get("data") or {}
+                except urllib.error.HTTPError as e:
+                    # creator_info requires video.publish, which is not grantable until
+                    # the Content Posting audit passes. Measured 2026-08-05: it returns
+                    # 401 scope_not_authorized on a video.upload-only token. That is
+                    # expected, not a fault — the inbox flow needs no privacy level,
+                    # because the creator picks those settings inside the TikTok app.
+                    if e.code != 401:
+                        raise
+                if not d.get("creator_nickname"):
+                    who = tt_get("/user/info/?fields=open_id,display_name,avatar_url", token)
+                    u = ((who.get("data") or {}).get("user")) or {}
+                    d.setdefault("creator_nickname", u.get("display_name", "(unknown)"))
+                    d.setdefault("creator_avatar_url", u.get("avatar_url", ""))
                 return self._send(200, json.dumps({
                     "nickname": d.get("creator_nickname", "(unknown)"),
                     "avatar": d.get("creator_avatar_url", ""),
+                    # empty in inbox mode; the UI hides the selector rather than
+                    # showing an empty dropdown the reviewer would flag
                     "privacy_options": d.get("privacy_level_options", []),
+                    "direct": DIRECT,
                     "comment_disabled": d.get("comment_disabled", False),
                     "duet_disabled": d.get("duet_disabled", False),
                     "stitch_disabled": d.get("stitch_disabled", False),
