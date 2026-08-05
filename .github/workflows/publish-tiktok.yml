@@ -1,0 +1,87 @@
+name: Wasilah TikTok publish
+
+# TWO ticks a day, ONE post each. tiktok.json carries the plan, so a day with
+# nothing due simply finds nothing. Self-healing: the ledger is the authority,
+# and a failed post is retried on the next tick rather than lost.
+#
+# WHY A CRON AND NOT TIKTOK'S OWN SCHEDULER. TikTok's Content Posting API has no
+# schedule_time parameter, and the conclusion previously drawn from that was that
+# TikTok had to be driven through its web scheduler by a browser on Miraz's Mac.
+# That was wrong and it cost months. Meta and YouTube do not use platform
+# schedulers either — this cron is the scheduler. The runner wakes at the slot
+# and posts immediately, so DIRECT_POST is sufficient and the Mac stays off.
+#
+# Dhaka is UTC+6.  Slot      Dhaka   UTC     why
+#                  morning   09:00   03:00   n=4, median 287 views
+#                  prime     21:00   15:00   n=12, median 212 views, the proven slot
+#
+# Those two hours are measured from every post published before the 1 Aug 2026
+# blackout, not chosen by feel. 19:00, 20:00, 22:00 and 23:00 all sat at a median
+# of 1 to 2 views. On 29 Jul the 09:00 and 21:00 posts took 287 each on the same
+# day, which is why two a day is safe. Do not add a third slot to drain a
+# backlog: ~25 posts went out in three hours on 29 Jul and all of them died.
+#
+# GitHub's scheduler is best-effort and runs 5-15 minutes late under load. These
+# are windows, not appointments, which is fine — nothing here is quota-boundary
+# sensitive the way the YouTube workflow is.
+on:
+  schedule:
+    - cron: '0 3 * * *'
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+    inputs:
+      max_per_run:
+        description: 'Posts this run. Keep at 1; bursts are what killed reach on 29 Jul.'
+        required: false
+        default: '1'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wasilah-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish-tiktok:
+    runs-on: ubuntu-latest
+    steps:
+      # `ref: main` is load-bearing, not tidiness. A bare checkout takes
+      # github.sha, which for a scheduled run is the SHA of main when the run was
+      # CREATED, not when it starts. That is how a YouTube run on 2026-08-03
+      # checked out a tree from before the ledger commit and published a second
+      # copy of a video. Resolving the branch at checkout time is what makes the
+      # ledger authoritative.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Publish due videos to TikTok
+        env:
+          TT_CLIENT_KEY: ${{ secrets.TT_CLIENT_KEY }}
+          TT_CLIENT_SECRET: ${{ secrets.TT_CLIENT_SECRET }}
+          TT_REFRESH_TOKEN: ${{ secrets.TT_REFRESH_TOKEN }}
+          TT_MAX_PER_RUN: ${{ github.event.inputs.max_per_run || vars.TT_MAX_PER_RUN || '1' }}
+        run: python3 run_tiktok.py
+      - name: Commit updated state
+        run: |
+          git config user.name "wasilah-bot"
+          git config user.email "wasilah-bot@users.noreply.github.com"
+          # Commit BEFORE rebasing: `git pull --rebase` refuses to run against a
+          # dirty tree, and run_tiktok.py has just written the ledger.
+          git add posted_tiktok.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "no state change"
+            exit 0
+          fi
+          git commit -m "state: update posted tiktok [skip ci]"
+          # A lost push here does not merely skip a commit. The post already went
+          # out, so an unrecorded ledger makes the next tick publish the same
+          # video again, and a duplicate on TikTok reads as spam on an account
+          # that is already in trouble. Retry rather than drop it.
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            echo "ledger push attempt $i failed, retrying"
+            sleep 5
+          done
+          echo "ledger push failed after 3 attempts; posted_tiktok.json is NOT saved" >&2
+          exit 1
