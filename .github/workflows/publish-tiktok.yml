@@ -24,10 +24,22 @@ name: Wasilah TikTok publish
 # GitHub's scheduler is best-effort and runs 5-15 minutes late under load. These
 # are windows, not appointments, which is fine — nothing here is quota-boundary
 # sensitive the way the YouTube workflow is.
+# CHANGED 2026-08-07: one post a day, not two, and from daily.json rather than
+# tiktok.json. TikTok and YouTube now publish the same asset on the same day with
+# the same words, which is only possible on a single shared queue and a single
+# shared cadence. 09:00 Dhaka is still a proven slot and is given up deliberately,
+# because YouTube cannot mirror two a day inside its 6-upload quota alongside any
+# future ramp, and an unmatched post is exactly the drift being removed here.
+#
+# The 17:00 UTC tick is a RETRY. After the day's post lands the next entry is
+# dated tomorrow, so it finds nothing due and exits.
+#
+# Dhaka is UTC+6.  post   21:00 Dhaka   15:00 UTC   n=12, median 212 views
+#                  retry  23:00 Dhaka   17:00 UTC   only fires if the post failed
 on:
   schedule:
-    - cron: '0 3 * * *'
     - cron: '0 15 * * *'
+    - cron: '0 17 * * *'
   workflow_dispatch:
     inputs:
       max_per_run:
@@ -68,7 +80,7 @@ jobs:
           git config user.email "wasilah-bot@users.noreply.github.com"
           # Commit BEFORE rebasing: `git pull --rebase` refuses to run against a
           # dirty tree, and run_tiktok.py has just written the ledger.
-          git add posted_tiktok.json 2>/dev/null || true
+          git add posted_tiktok.json skipped_tiktok.json 2>/dev/null || true
           if git diff --staged --quiet; then
             echo "no state change"
             exit 0

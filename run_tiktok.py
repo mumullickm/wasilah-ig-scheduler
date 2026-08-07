@@ -37,8 +37,17 @@ CREATOR_URL = f"{API}/post/publish/creator_info/query/"
 INIT_URL = f"{API}/post/publish/video/init/"
 STATUS_URL = f"{API}/post/publish/status/fetch/"
 
-QUEUE = "tiktok.json"
+QUEUE = "daily.json"
 LEDGER = "posted_tiktok.json"
+SKIPPED = "skipped_tiktok.json"
+# The copy comes from the same file YouTube reads, so the two channels cannot say
+# different things about the same video. Miraz's instruction, 2026-08-07: the same
+# post on every platform. A caption duplicated into the queue would drift the first
+# time either side was edited, so it is derived here instead of stored.
+META = json.load(open("youtube_meta.json", encoding="utf-8")) \
+    if os.path.exists("youtube_meta.json") else {}
+CAPS = json.load(open("reel_captions.json", encoding="utf-8")) \
+    if os.path.exists("reel_captions.json") else {}
 MAX_PER_RUN = int(os.environ.get("TT_MAX_PER_RUN", "1"))
 # 64 MB is TikTok's max chunk. Every file in this queue is far below it, so each
 # upload is a single chunk and the multi-chunk path is deliberately not built.
@@ -97,11 +106,25 @@ def fetch_video(url):
     return data
 
 
+def caption_for(slug):
+    """The YouTube title and description, verbatim, as one TikTok caption.
+
+    TikTok's field is 2200 characters and holds no separate title, so the two are
+    joined rather than picking one. Falls back to the plain reel caption if a slug
+    is somehow absent from youtube_meta.json, which is a degraded-but-posting path
+    instead of a failed run.
+    """
+    m = META.get(slug)
+    if m:
+        return f"{m['title']}\n\n{m['description']}"[:2200]
+    return CAPS.get(slug, slug)[:2200]
+
+
 def publish(token, entry, privacy):
     video = fetch_video(entry["video"])
     init = post_json(INIT_URL, {
         "post_info": {
-            "title": entry["caption"][:2200],
+            "title": caption_for(entry["slug"]),
             "privacy_level": privacy,
             "disable_comment": False,
             "disable_duet": False,
@@ -155,11 +178,26 @@ def main():
         print("nothing due")
         return
 
-    print(f"{len(due)} due, posting at most {MAX_PER_RUN}")
-    if len(due) > MAX_PER_RUN:
-        # Never let a backlog drain silently. A quiet catch-up burst is exactly
-        # what killed ~25 posts on 29 Jul 2026.
-        print(f"DEFERRED to later ticks: {[e['slug'] for e in due[MAX_PER_RUN:]]}")
+    # TAKE THE NEWEST DUE ENTRY, NOT THE OLDEST. This is the opposite of what a
+    # queue normally does and it is deliberate. YouTube posts today's asset today.
+    # If TikTok has been down for a week and then drains oldest-first at one a day,
+    # it posts last Tuesday's video while YouTube posts today's, and the two
+    # channels stay permanently out of step by however long the outage lasted —
+    # the exact drift this shared queue exists to remove. Catching up faster is not
+    # the alternative either: ~25 posts in three hours on 29 Jul 2026 all died at
+    # 0-4 views. So the day's post is the day's post, and anything older is
+    # recorded as skipped rather than published late or dropped in silence.
+    stale, due = due[:-1], due[-1:]
+    if stale:
+        missed = json.load(open(SKIPPED, encoding="utf-8")) \
+            if os.path.exists(SKIPPED) else {}
+        for e in stale:
+            missed[e["slug"]] = e["iso"]
+        json.dump(missed, open(SKIPPED, "w", encoding="utf-8"),
+                  indent=1, ensure_ascii=False)
+        print(f"SKIPPED, older than today and not published: "
+              f"{[e['slug'] for e in stale]} (recorded in {SKIPPED}; requeue them "
+              f"with build_daily.py if they are still wanted)", file=sys.stderr)
 
     token = access_token()
     privacy = allowed_privacy(token)

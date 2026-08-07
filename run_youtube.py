@@ -31,8 +31,12 @@ META = json.load(open("youtube_meta.json", encoding="utf-8")) \
 # feed publishers are left alone. Falls back to the 4:5 base only if the 9:16
 # one is absent, which is a visible-but-working degrade rather than a crash.
 VIDEO_BASE = CFG.get("videoBase916") or CFG["videoBase"]
-MAX_PER_RUN = int(os.environ.get("YT_MAX_PER_RUN", "6"))
+# One a day, matching TikTok. Six was a drain rate for the back catalogue and the
+# quota ceiling allows it, but a channel posting six while the other posts one is
+# not the same post on every platform. See build_daily.py.
+MAX_PER_RUN = int(os.environ.get("YT_MAX_PER_RUN", "1"))
 CATEGORY_ID = "22"          # People & Blogs
+SKIPPED = "skipped_youtube.json"
 PRIVACY = os.environ.get("YT_PRIVACY", "public")
 
 
@@ -152,7 +156,16 @@ def upload(token, reel, blob):
 
 def main():
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    reels = json.load(open("reels.json"))
+    # daily.json is the shared queue that TikTok publishes from too, so both
+    # channels take the same asset on the same day. It carries `slug` where
+    # reels.json carries `reel`; the rest of this function is unchanged, and
+    # reels.json remains the fallback so a missing queue degrades to the old
+    # behaviour rather than failing the run. IG and FB still read reels.json.
+    if os.path.exists("daily.json"):
+        reels = [{"reel": e["slug"], "iso": e["iso"]}
+                 for e in json.load(open("daily.json", encoding="utf-8"))]
+    else:
+        reels = json.load(open("reels.json"))
     state = json.load(open("posted_youtube.json")) if os.path.exists("posted_youtube.json") else {}
     now = datetime.datetime.now(datetime.timezone.utc)
 
@@ -163,7 +176,10 @@ def main():
     # DRAIN=1 ignores the reels.json date gate and works through the whole back
     # catalogue at MAX_PER_RUN a day. Set DRAIN=0 once caught up, and YouTube goes
     # back to posting the same evening as IG and FB.
-    drain = os.environ.get("YT_DRAIN", "1") == "1"
+    # DRAIN is now OFF by default. It existed to burn through a back catalogue at
+    # six a day, which is precisely what put YouTube 34 assets ahead of TikTok.
+    # With the shared queue the schedule IS the plan, so honour it.
+    drain = os.environ.get("YT_DRAIN", "0") == "1"
     due, seen = [], set()
     for r in reels:
         if not drain and datetime.datetime.fromisoformat(r["iso"].replace("Z", "+00:00")) > now:
@@ -176,6 +192,22 @@ def main():
     if not due:
         print(f"[{stamp}] no YouTube uploads due")
         return
+
+    # Same rule as run_tiktok.py: on a schedule, the newest due entry is the day's
+    # post and anything older is recorded, not published late. Two channels each
+    # draining their own backlog oldest-first end up posting different videos on
+    # the same day, which is the drift daily.json exists to remove. Under DRAIN
+    # this does not apply, because there the whole catalogue is deliberately due.
+    if not drain and len(due) > 1:
+        stale, due = due[:-1], due[-1:]
+        missed = json.load(open(SKIPPED, encoding="utf-8")) \
+            if os.path.exists(SKIPPED) else {}
+        for r in stale:
+            missed[asset_id(r["reel"])] = r["iso"]
+        json.dump(missed, open(SKIPPED, "w", encoding="utf-8"),
+                  indent=2, ensure_ascii=False)
+        print(f"[{stamp}] skipped as older than today: "
+              f"{[r['reel'] for r in stale]} (recorded in {SKIPPED})")
 
     batch, deferred = due[:MAX_PER_RUN], due[MAX_PER_RUN:]
     print(f"[{stamp}] mode={'DRAIN (ignoring schedule)' if drain else 'scheduled'}, "

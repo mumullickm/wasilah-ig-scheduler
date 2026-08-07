@@ -33,14 +33,24 @@ name: Wasilah YouTube publish
 # at 2 the day's quota is spent by the third run. It is deliberately low anyway
 # while the reinstated account settles, because a burst of API uploads is what
 # got it suspended on 1 Aug 2026.
+# SUPERSEDED 2026-08-07: the six-tick drain above is history, kept because the
+# quota arithmetic still governs any future ramp. YouTube now posts ONCE a day,
+# from daily.json, the same asset TikTok posts, at 21:00 Dhaka. Miraz's
+# instruction: the same post on every platform, and no day missed. Six a day on
+# one channel and one on the other cannot satisfy that, and the quota ceiling is
+# on YouTube's side, so YouTube is the one that slows down.
+#
+# The second tick is a RETRY, not a second post. Once the day's asset is in the
+# ledger the next entry is dated tomorrow, so the 17:00 run finds nothing due and
+# exits. It exists because on 2026-08-06 three scheduled runs were cancelled
+# GitHub-side between 16:00 and 18:30 UTC and that day would otherwise be lost.
+#
+# Dhaka is UTC+6.  post   21:00 Dhaka   15:00 UTC   the proven slot
+#                  retry  23:00 Dhaka   17:00 UTC   only fires if the post failed
 on:
   schedule:
-    - cron: '0 8 * * *'
-    - cron: '0 11 * * *'
-    - cron: '0 14 * * *'
-    - cron: '30 15 * * *'
+    - cron: '0 15 * * *'
     - cron: '0 17 * * *'
-    - cron: '30 3 * * *'
   workflow_dispatch:
     inputs:
       max_per_run:
@@ -75,7 +85,10 @@ jobs:
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           YT_MAX_PER_RUN: ${{ github.event.inputs.max_per_run || vars.YT_MAX_PER_RUN || '1' }}
-          YT_DRAIN: ${{ vars.YT_DRAIN || '1' }}
+          # DRAIN off: daily.json is the plan and both channels honour it. Left as
+          # a repo variable so a backlog can still be burned deliberately, but
+          # turning it on breaks parity with TikTok until it is turned off again.
+          YT_DRAIN: ${{ vars.YT_DRAIN || '0' }}
         run: python3 run_youtube.py
       - name: Commit updated state
         run: |
@@ -86,7 +99,7 @@ jobs:
           # pull failed on every single run and `|| true` swallowed it. The
           # rebase exists to let this land when a sibling publisher pushed after
           # checkout; ordered this way round it never protected anything.
-          git add posted_youtube.json 2>/dev/null || true
+          git add posted_youtube.json skipped_youtube.json 2>/dev/null || true
           if git diff --staged --quiet; then
             echo "no state change"
             exit 0
