@@ -93,7 +93,13 @@ jobs:
           git config user.email "wasilah-bot@users.noreply.github.com"
           # Commit BEFORE rebasing: `git pull --rebase` refuses to run against a
           # dirty tree, and run_tiktok.py has just written the ledger.
-          git add posted_tiktok.json skipped_tiktok.json 2>/dev/null || true
+          # ONE PATHSPEC PER CALL. `git add a b` stages NOTHING when b does not
+          # exist, it just fails the whole command, and the `|| true` hides it.
+          # That is how posted_tiktok.json went uncommitted on 2026-08-07
+          # after a real upload, which would have had the retry tick publish the
+          # same video a second time.
+          git add posted_tiktok.json 2>/dev/null || true
+          git add skipped_tiktok.json 2>/dev/null || true
           if git diff --staged --quiet; then
             echo "no state change"
             exit 0

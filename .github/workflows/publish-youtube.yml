@@ -99,7 +99,13 @@ jobs:
           # pull failed on every single run and `|| true` swallowed it. The
           # rebase exists to let this land when a sibling publisher pushed after
           # checkout; ordered this way round it never protected anything.
-          git add posted_youtube.json skipped_youtube.json 2>/dev/null || true
+          # ONE PATHSPEC PER CALL. `git add a b` stages NOTHING when b does not
+          # exist, it just fails the whole command, and the `|| true` hides it.
+          # That is how posted_youtube.json went uncommitted on 2026-08-07
+          # after a real upload, which would have had the retry tick publish the
+          # same video a second time.
+          git add posted_youtube.json 2>/dev/null || true
+          git add skipped_youtube.json 2>/dev/null || true
           if git diff --staged --quiet; then
             echo "no state change"
             exit 0
