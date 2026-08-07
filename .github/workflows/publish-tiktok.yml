@@ -1,5 +1,18 @@
 name: Wasilah TikTok publish
 
+# DISABLED 2026-08-07, and it is not coming back without a policy change at
+# TikTok's end. The Content Posting audit was rejected on 2026-08-06 because
+# self-publishing to your own account is a banned use case, so the token carries
+# video.upload but not video.publish and creator_info/query returns 401
+# scope_not_authorized (verified live, not inferred). Left enabled it would fail
+# once a day and record entries it never posted.
+#
+# TikTok is published instead by tiktok-queue/post_daily.js on the Mac, which
+# reads this repo's daily.json and youtube_meta.json and drives TikTok's OWN
+# scheduler, so posts still land on days the Mac is asleep. Top it up with
+# tiktok-queue/run_daily.sh. Re-enable this workflow only if video.publish is
+# ever granted.
+
 # TWO ticks a day, ONE post each. tiktok.json carries the plan, so a day with
 # nothing due simply finds nothing. Self-healing: the ledger is the authority,
 # and a failed post is retried on the next tick rather than lost.
