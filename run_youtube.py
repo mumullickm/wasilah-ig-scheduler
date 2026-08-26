@@ -38,6 +38,24 @@ MAX_PER_RUN = int(os.environ.get("YT_MAX_PER_RUN", "1"))
 CATEGORY_ID = "22"          # People & Blogs
 SKIPPED = "skipped_youtube.json"
 PRIVACY = os.environ.get("YT_PRIVACY", "public")
+# Content ID gate. The four-ayah d-series carries Mishary Alafasy recitation, and
+# several of those recordings are registered to commercial claimants whose policy
+# is block-globally. YouTube's own wording on the two that went down: "Your Short
+# can't be played because it contains claimed content that exceeds the length
+# limits set by the copyright holder." Verified in Studio on 2026-08-26: d03
+# (1:09) and d04 (1:35) blocked globally, while d01 (0:57) and d02 (0:59) carry
+# the same Alafasy claims marked "no impact on the video's reach". Duration is
+# the only observable separating them, so anything longer is held back rather
+# than spent on an upload nobody can play. A held asset is NOT written to
+# posted_youtube.json, so it publishes normally once re-rendered with a reciter
+# that is not Content ID registered. The claims are not strikes and the channel
+# is not at risk either way.
+# An asset missing from durations.json is allowed through on purpose: an unknown
+# length degrades to the previous behaviour instead of silently muting the queue.
+MAX_SECONDS = float(os.environ.get("YT_MAX_SECONDS", "60"))
+DURATIONS = json.load(open("durations.json", encoding="utf-8")) \
+    if os.path.exists("durations.json") else {}
+HELD = "held_youtube.json"
 
 
 def access_token():
@@ -59,6 +77,12 @@ def asset_id(rid):
 
 def video_url(reel):
     return f"{VIDEO_BASE}/{asset_id(reel)}.mp4"
+
+
+def over_limit(reel):
+    """Length in seconds if this asset is too long to publish, else None."""
+    d = DURATIONS.get(asset_id(reel))
+    return d if d is not None and d > MAX_SECONDS else None
 
 
 def title_for(cap):
@@ -180,6 +204,8 @@ def main():
     # six a day, which is precisely what put YouTube 34 assets ahead of TikTok.
     # With the shared queue the schedule IS the plan, so honour it.
     drain = os.environ.get("YT_DRAIN", "0") == "1"
+    held = json.load(open(HELD, encoding="utf-8")) if os.path.exists(HELD) else {}
+    held_before = dict(held)
     due, seen = [], set()
     for r in reels:
         if not drain and datetime.datetime.fromisoformat(r["iso"].replace("Z", "+00:00")) > now:
@@ -188,7 +214,17 @@ def main():
         if aid in state or aid in seen:
             continue
         seen.add(aid)
+        over = over_limit(r["reel"])
+        if over is not None:
+            held[aid] = {"iso": r["iso"], "seconds": over}
+            continue
         due.append(r)
+    if held != held_before:
+        json.dump(held, open(HELD, "w", encoding="utf-8"),
+                  indent=2, ensure_ascii=False, sort_keys=True)
+        fresh = sorted(k for k in held if k not in held_before)
+        print(f"[{stamp}] held over {MAX_SECONDS:g}s, Content ID would block the "
+              f"Short: {', '.join(fresh)} (recorded in {HELD}, not marked posted)")
     if not due:
         print(f"[{stamp}] no YouTube uploads due")
         return
