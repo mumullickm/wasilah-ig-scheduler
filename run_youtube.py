@@ -52,7 +52,12 @@ PRIVACY = os.environ.get("YT_PRIVACY", "public")
 # is not at risk either way.
 # An asset missing from durations.json is allowed through on purpose: an unknown
 # length degrades to the previous behaviour instead of silently muting the queue.
-MAX_SECONDS = float(os.environ.get("YT_MAX_SECONDS", "60"))
+# Armed at 60 on 2026-08-26 while the queue still held Alafasy audio. Disarmed
+# the same night once every remaining asset (d05 to d45) was re-rendered with
+# Ad-Dussary, whose claims are track-only, which makes length irrelevant. 0 is
+# off. Re-arm instantly with YT_MAX_SECONDS=60 if a Short ever comes back
+# blocked; durations.json is kept current for exactly that reason.
+MAX_SECONDS = float(os.environ.get("YT_MAX_SECONDS", "0"))
 DURATIONS = json.load(open("durations.json", encoding="utf-8")) \
     if os.path.exists("durations.json") else {}
 HELD = "held_youtube.json"
@@ -81,6 +86,8 @@ def video_url(reel):
 
 def over_limit(reel):
     """Length in seconds if this asset is too long to publish, else None."""
+    if not MAX_SECONDS:
+        return None
     d = DURATIONS.get(asset_id(reel))
     return d if d is not None and d > MAX_SECONDS else None
 
