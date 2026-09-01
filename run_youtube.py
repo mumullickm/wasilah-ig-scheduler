@@ -116,12 +116,24 @@ def tags_for(cap):
     return re.findall(r"#(\w+)", cap)[:15]
 
 
+# Every Short is a doorway to the full library: the complete-Quran playlist
+# (114 surahs, public since 2026-09-01) rides in every description.
+QURAN_PLAYLIST_BLOCK = (
+    "\n\nThe complete Qur'an, all 114 surahs with English translation:\n"
+    "https://www.youtube.com/playlist?list=PLbXMSlg6mVDE"
+)
+
+
 def snippet_for(reel, cap):
     """Metadata for one upload, preferring youtube_meta.json over the fallback."""
     m = META.get(reel) or META.get(asset_id(reel))
     if m:
-        return m["title"], m["description"], m["tags"]
-    return title_for(cap), cap, tags_for(cap)
+        title, description, tags = m["title"], m["description"], m["tags"]
+    else:
+        title, description, tags = title_for(cap), cap, tags_for(cap)
+    if "PLbXMSlg6mVDE" not in description:
+        description += QURAN_PLAYLIST_BLOCK
+    return title, description, tags
 
 
 def fetch_video(reel):
