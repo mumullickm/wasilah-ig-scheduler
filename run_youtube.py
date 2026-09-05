@@ -10,7 +10,7 @@ Quota note: a video insert costs 1600 units against a 10,000/day default, so at
 most 6 uploads a day are possible. MAX_PER_RUN caps below that and any deferred
 reels are logged explicitly, never dropped silently.
 """
-import datetime, json, os, re, ssl, urllib.error, urllib.parse, urllib.request
+import datetime, json, os, re, ssl, time, urllib.error, urllib.parse, urllib.request
 
 TOKEN_URL = "https://oauth2.googleapis.com/token"
 UPLOAD_URL = ("https://www.googleapis.com/upload/youtube/v3/videos"
@@ -31,6 +31,14 @@ META = json.load(open("youtube_meta.json", encoding="utf-8")) \
 # feed publishers are left alone. Falls back to the 4:5 base only if the 9:16
 # one is absent, which is a visible-but-working degrade rather than a crash.
 VIDEO_BASE = CFG.get("videoBase916") or CFG["videoBase"]
+# Thumbnails. Until 2026-09-05 this script never set one, so every reel on the
+# channel showed an auto-grabbed frame and the grid read as unrelated uploads.
+# Custom thumbnails are invisible in the Shorts feed, but search, the channel
+# grid, suggested and every shared link use them. Built by
+# wasilah-social/cards/make_thumbs.py and hosted alongside the 9:16 masters.
+# Optional on purpose: a missing thumbnail logs and the upload still stands.
+THUMB_BASE = CFG.get("thumbBase")
+THUMB_URL = "https://www.googleapis.com/upload/youtube/v3/thumbnails/set"
 # One a day, matching TikTok. Six was a drain rate for the back catalogue and the
 # quota ceiling allows it, but a channel posting six while the other posts one is
 # not the same post on every platform. See build_daily.py.
@@ -142,6 +150,38 @@ def fetch_video(reel):
         if r.status != 200:
             raise RuntimeError(f"asset fetch {r.status} for {url}")
         return r.read()
+
+
+def set_thumbnail(token, vid, reel):
+    """Best effort. Costs 50 quota units against the 1600 the insert already
+    spent, so it is never the reason a run stops. Returns a log line or None."""
+    if not THUMB_BASE:
+        return "no thumbBase in config.json"
+    url = f"{THUMB_BASE}/{asset_id(reel)}.jpg"
+    try:
+        with urllib.request.urlopen(url, timeout=60) as r:
+            img = r.read()
+    except Exception as e:
+        return f"thumbnail fetch failed, {e}"
+    req = urllib.request.Request(
+        f"{THUMB_URL}?videoId={vid}", data=img, method="POST",
+        headers={"Authorization": f"Bearer {token}",
+                 "Content-Type": "image/jpeg",
+                 "Content-Length": str(len(img))})
+    # A 503 backendError here is transient and common; two retries clear it.
+    for attempt in range(3):
+        try:
+            urllib.request.urlopen(req, timeout=120).read()
+            return None
+        except urllib.error.HTTPError as e:
+            body = e.read()[:160].decode(errors="replace")
+            if attempt == 2:
+                return f"thumbnail set failed {e.code}: {body}"
+            time.sleep(4)
+        except Exception as e:
+            if attempt == 2:
+                return f"thumbnail set failed, {e}"
+            time.sleep(4)
 
 
 def upload(token, reel, blob):
@@ -287,6 +327,9 @@ def main():
         if ok:
             state[asset_id(reel)] = info
             print(f"[{stamp}] YT {reel}: published https://youtu.be/{info}")
+            problem = set_thumbnail(token, info, reel)
+            if problem:
+                print(f"[{stamp}] YT {reel}: {problem} (video is up regardless)")
         else:
             print(f"[{stamp}] YT {reel}: {info}")
 
