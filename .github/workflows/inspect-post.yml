@@ -10,6 +10,10 @@ on:
         description: also force Facebook to refetch every unpublished surah link
         required: false
         default: "false"
+      scrape_url:
+        description: refetch only this one url instead of the whole queue
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -28,4 +32,5 @@ jobs:
       - if: ${{ inputs.rescrape == 'true' }}
         env:
           META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+          SCRAPE_URL: ${{ inputs.scrape_url }}
         run: python3 rescrape.py

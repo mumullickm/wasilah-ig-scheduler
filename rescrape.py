@@ -26,6 +26,15 @@ def _post(path, params, timeout=120):
 
 
 def main():
+    one = os.environ.get("SCRAPE_URL")
+    if one:
+        # A published post keeps whatever Facebook rendered at publish time, so
+        # this refetch may or may not reach it. Worth one try before concluding
+        # the post is stuck with an old card.
+        r = _post("", {"id": one, "scrape": "true"})
+        print(json.dumps(r, indent=1)[:800])
+        return
+
     sched = json.load(open("surahs.json"))
     now = datetime.datetime.now(datetime.timezone.utc)
     done = 0
