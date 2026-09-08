@@ -34,6 +34,10 @@ jobs:
         env:
           META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
         run: python3 run_surahs.py
+      - name: Verify what the Page actually holds
+        env:
+          META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+        run: python3 verify_surahs.py
       - name: Commit state
         run: |
           git config user.name "github-actions[bot]"
