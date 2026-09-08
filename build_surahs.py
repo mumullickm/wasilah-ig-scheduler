@@ -87,11 +87,17 @@ def main():
         when = datetime.datetime.combine(
             d0 + datetime.timedelta(days=n - 1),
             datetime.time(HOUR_UTC, 0), datetime.timezone.utc)
+        # Surah 1 carries a "&t=0s" tail. Facebook pins its cached preview
+        # image to the exact url string, and it had already cached the old card
+        # for the bare watch url before the 2026-09-08 re-render. A distinct url
+        # is the only thing that made it fetch the new card. YouTube treats it
+        # as the same video. Do not "tidy" this away.
+        link = f"https://www.youtube.com/watch?v={e['id']}" + ("&t=0s" if n == 1 else "")
         out.append({
             "slug": f"surah-{n:03d}",
             "iso": when.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "message": message(n, playlist),
-            "link": f"https://www.youtube.com/watch?v={e['id']}",
+            "link": link,
         })
 
     if a.write:
