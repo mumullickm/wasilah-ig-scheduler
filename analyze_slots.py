@@ -19,8 +19,12 @@ TOKEN = os.environ["META_PAGE_TOKEN"]
 BD = datetime.timezone(datetime.timedelta(hours=6))
 LEDGERS = ["posted_statics.json", "posted_reels.json", "posted_links.json"]
 FIELDS = ("created_time,shares,"
-          "reactions.summary(true).limit(0),comments.summary(true).limit(0),"
-          "insights.metric(post_impressions_unique,post_engaged_users)")
+          "reactions.summary(true).limit(0),comments.summary(true).limit(0)")
+# Post-level metrics get retired between Graph versions, so the valid set is
+# probed at runtime instead of hard-coded and trusted.
+METRICS = ["post_impressions", "post_impressions_unique", "post_clicks",
+           "post_reactions_by_type_total", "post_engaged_users",
+           "post_video_views"]
 
 
 def _get(path, params):
@@ -37,16 +41,35 @@ def ids():
     for f in LEDGERS:
         if not os.path.exists(f):
             continue
-        for slug, pid in json.load(open(f)).items():
-            if isinstance(pid, str) and "_" in pid:
+        for slug, v in json.load(open(f)).items():
+            pid = v.get("fb") if isinstance(v, dict) else v
+            if isinstance(pid, str) and pid:
                 out.append((f, slug, pid))
     return out
+
+
+def probe(pid):
+    """Return the metrics this token is actually allowed to read on this Page."""
+    ok = []
+    for m in METRICS:
+        r = _get(f"{pid}/insights", {"metric": m})
+        if "_error" in r:
+            print(f"  {m}: {r['_error'].get('message')}")
+        else:
+            ok.append(m)
+            print(f"  {m}: OK")
+    return ok
 
 
 def main():
     rows, denied, missing = [], 0, 0
     batch = ids()
     print(f"{len(batch)} post ids across {len(LEDGERS)} ledgers")
+    print("probing insight metrics on", batch[0][2])
+    allowed = probe(batch[0][2])
+    print("allowed metrics:", allowed)
+    reach_metric = ("post_impressions_unique" if "post_impressions_unique" in allowed
+                    else ("post_impressions" if "post_impressions" in allowed else None))
 
     for i in range(0, len(batch), 25):
         chunk = batch[i:i + 25]
@@ -64,13 +87,14 @@ def main():
                    + d.get("comments", {}).get("summary", {}).get("total_count", 0)
                    + d.get("shares", {}).get("count", 0))
             reach = None
-            ins = d.get("insights")
-            if isinstance(ins, dict) and ins.get("data"):
-                for m in ins["data"]:
-                    if m["name"] == "post_impressions_unique" and m["values"]:
-                        reach = m["values"][0].get("value")
-            elif ins is None:
-                denied += 1
+            if reach_metric:
+                ins = _get(f"{pid}/insights", {"metric": reach_metric})
+                if "_error" in ins:
+                    denied += 1
+                else:
+                    for m in ins.get("data", []):
+                        if m["values"]:
+                            reach = m["values"][0].get("value")
             rows.append({"src": src, "slug": slug, "hour": t.hour,
                          "date": t.date().isoformat(), "eng": eng, "reach": reach})
 
