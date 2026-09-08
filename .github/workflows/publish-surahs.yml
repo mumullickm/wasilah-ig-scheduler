@@ -1,0 +1,43 @@
+name: Wasilah Qur'an surah series publish
+
+# Facebook-only link posts, one surah a day, 1 to 114, pointing at each surah's
+# video on the Wasilah YouTube channel. Facebook renders the video's own
+# thumbnail (the surah card) as the link card.
+#
+# Timing does NOT depend on this cron. run_surahs.py hands each post to
+# Facebook's own scheduler, so publication happens at the exact minute even if
+# a runner is late or skipped. This daily tick walks the 25-day registration
+# window forward.
+on:
+  schedule:
+    - cron: '20 3 * * *'   # 09:20 BD daily, clear of the 09:00 links tick
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wasilah-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish-surahs:
+    runs-on: ubuntu-latest
+    steps:
+      # `ref: main` resolves the branch at checkout time. A bare checkout pins
+      # to the SHA from when the run was created, so a ledger commit landing in
+      # between is invisible and the publisher re-posts what it already sent.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Register due surah posts (FB)
+        env:
+          META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+        run: python3 run_surahs.py
+      - name: Commit state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add posted_surahs.json
+          git diff --staged --quiet || git commit -m "state: update posted surahs [skip ci]"
+          git push
