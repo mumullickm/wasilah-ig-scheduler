@@ -15,13 +15,18 @@ ledger and is never sent twice.
 
 Secret: META_PAGE_TOKEN.
 """
-import datetime, json, os, urllib.error, urllib.parse, urllib.request
+import datetime, hashlib, json, os, urllib.error, urllib.parse, urllib.request
 
 GRAPH = "https://graph.facebook.com/v21.0"
 TOKEN = os.environ["META_PAGE_TOKEN"]
 
 SCHEDULE = "surahs.json"
 STATE = "posted_surahs.json"
+# What was actually handed to Facebook, per slug. Editing surahs.json after a
+# post is already sitting in Facebook's scheduler would otherwise be silent:
+# the ledger says "done" and the Page still holds the old caption and the old
+# minute. This file is how the drift is noticed and pushed.
+SYNC = "surahs_synced.json"
 
 HORIZON = datetime.timedelta(days=25)
 # Facebook rejects scheduled_publish_time under 10 minutes out; keep margin.
@@ -44,6 +49,22 @@ def _post(path, params, timeout=120):
         return {"_error": json.loads(e.read().decode()).get("error", {})}
 
 
+def fingerprint(item):
+    return hashlib.sha256(
+        (item["message"] + "|" + item["iso"] + "|" + item["link"]).encode()).hexdigest()[:16]
+
+
+def edit_scheduled(post_id, item, when):
+    """Push a new caption and minute onto a post already sitting in Facebook's
+    scheduler. The link cannot be edited, so a changed link is reported rather
+    than half-applied."""
+    r = _post(post_id, {"message": item["message"],
+                        "scheduled_publish_time": str(int(when.timestamp()))})
+    if "_error" in r:
+        return False, f"FB edit error {r['_error']}"
+    return True, "updated"
+
+
 def publish_fb_link(page_id, item, when=None):
     params = {"message": item["message"], "link": item["link"]}
     if when is not None:
@@ -59,8 +80,29 @@ def main():
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     sched = json.load(open(SCHEDULE))
     state = json.load(open(STATE)) if os.path.exists(STATE) else {}
+    sync = json.load(open(SYNC)) if os.path.exists(SYNC) else {}
     now = datetime.datetime.now(datetime.timezone.utc)
     page_id = _get("me").get("id")
+
+    # 1. Anything already handed over whose caption or minute has since changed,
+    #    and which has not published yet, gets edited in place.
+    for s in sched:
+        pid = state.get(s["slug"])
+        if not pid or not isinstance(pid, str):
+            continue
+        fp = fingerprint(s)
+        if sync.get(s["slug"]) == fp:
+            continue
+        when = datetime.datetime.fromisoformat(s["iso"].replace("Z", "+00:00"))
+        if when <= now + MIN_LEAD:
+            print(f"[{stamp}] {s['slug']} changed but is already due or published, left alone")
+            sync[s["slug"]] = fp
+            continue
+        ok, info = edit_scheduled(pid, s, when)
+        print(f"[{stamp}] FB {s['slug']}: {info}")
+        if ok:
+            sync[s["slug"]] = fp
+    json.dump(sync, open(SYNC, "w"), ensure_ascii=False, indent=2)
 
     pending = []
     for s in sched:
@@ -72,7 +114,7 @@ def main():
         pending.append((s, when))
 
     if not pending:
-        print(f"[{stamp}] no surah posts due inside the {HORIZON.days}-day window")
+        print(f"[{stamp}] no new surah posts due inside the {HORIZON.days}-day window")
         return
 
     for s, when in pending:
@@ -84,6 +126,8 @@ def main():
             ok, info = publish_fb_link(page_id, s)
             verb = "published now"
         state[s["slug"]] = info if ok else False
+        if ok:
+            sync[s["slug"]] = fingerprint(s)
         print(f"[{stamp}] FB {s['slug']}: {verb + ' ' + info if ok else info}")
         if not ok:
             # A cap or token failure will hit every remaining item the same way.
@@ -92,6 +136,7 @@ def main():
             break
 
     json.dump(state, open(STATE, "w"), ensure_ascii=False, indent=2)
+    json.dump(sync, open(SYNC, "w"), ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":

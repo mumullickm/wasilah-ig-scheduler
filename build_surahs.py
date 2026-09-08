@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """Build surahs.json: one Facebook link post per surah, 1 to 114, one a day.
 
+Captions are hand-written, one per surah, in surah_captions.py. Nothing here is
+templated.
+
 Each post links to that surah's video on the Wasilah YouTube channel. Facebook
-scrapes the URL and renders YouTube's own thumbnail, which is the 1280x720
-surah card rendered by wasilah-quran-video (`thumbs/NNN.jpg`), so the card is
-what appears on the Page without uploading any media here.
+scrapes the URL and renders its og:image, which is the 1280x720 surah card from
+wasilah-quran-video/thumbs, so the card appears on the Page with no media
+uploaded from here.
 
 Video ids come from the render repo's own ledger, never hand-typed:
     ~/Developer/wasilah-quran-video/state/uploaded.json
@@ -13,11 +16,18 @@ Usage:  python3 build_surahs.py --start 2026-09-09 --write
 """
 import argparse, datetime, json, os
 
+from surah_captions import CAPTIONS
+
 LEDGER = os.path.expanduser("~/Developer/wasilah-quran-video/state/uploaded.json")
-CHAPTERS = os.path.expanduser("~/Developer/wasilah-quran-video/data/chapters.json")
 OUT = "surahs.json"
-HOUR_UTC = 13  # 19:00 Dhaka. Every other Wasilah slot is taken, see the hour
-               # histogram in statics/reels/carousels/daily.
+
+# 09:00 Dhaka. Chosen from this Page's own 159-post history (analyze_slots.py):
+# the 08:00 and 09:00 buckets carry the highest median engagement, the evening
+# block from 21:00 is already triple-booked by statics, reels and carousels,
+# and 23:00 to 01:00 is the worst hour on the Page. Post-level reach is not
+# measurable, Graph v21 retired the whole post_impressions family, so this is
+# ranked on public engagement counts and it is a weak signal, not a strong one.
+HOUR_UTC = 3
 
 BN = {
  1:"আল-ফাতিহা",2:"আল-বাকারা",3:"আলে ইমরান",4:"আন-নিসা",5:"আল-মায়িদা",6:"আল-আনআম",
@@ -43,62 +53,17 @@ BN = {
  112:"আল-ইখলাস",113:"আল-ফালাক",114:"আন-নাস",
 }
 
-# A true line about the surah, only where there is something real to say.
-NOTE = {
- 1:"নামাজের প্রতি রাকাতে যে সূরা পড়তে হয়। কোরআনের শুরু এখান থেকেই।",
- 2:"কোরআনের দীর্ঘতম সূরা। আয়াতুল কুরসি আর শেষ দুই আয়াত এই সূরাতেই।",
- 3:"ইমরানের পরিবার, মারইয়াম আর ঈসা (আ.)-এর কথা এসেছে এখানে।",
- 4:"পরিবার, উত্তরাধিকার আর নারীর অধিকার নিয়ে বিধান এই সূরায়।",
- 12:"ইউসুফ (আ.)-এর পুরো জীবনকাহিনি, এক সূরায় শুরু থেকে শেষ।",
- 18:"জুমার দিনে পড়ার সূরা। গুহার সঙ্গীদের ঘটনা এখানেই।",
- 19:"মারইয়াম (আ.)-এর কথা, তাঁর নামেই এই সূরা।",
- 24:"নূরের আয়াত এই সূরায়। আলো আর পর্দার বিধান একসাথে।",
- 36:"কোরআনের হৃদয় বলা হয় এই সূরাকে।",
- 55:"যে সূরায় বারবার প্রশ্ন আসে, তোমরা রবের কোন নিয়ামত অস্বীকার করবে।",
- 56:"কেয়ামতের দিন মানুষ তিন দলে ভাগ হবে, সেই বর্ণনা এই সূরায়।",
- 62:"জুমার সূরা। শুক্রবারের আজানের পর ব্যবসা ছেড়ে ছুটে যাওয়ার নির্দেশ এখানে।",
- 67:"রাতে ঘুমানোর আগে পড়ার সূরা, তাবারাকা।",
- 71:"নূহ (আ.) সাড়ে নয়শো বছর ডেকেছিলেন। সেই ডাকের কথা।",
- 78:"আম্মা পারার শুরু। কেয়ামতের সংবাদ নিয়ে।",
- 93:"যখন মনে হয় সব থেমে গেছে, এই সূরা নাজিল হয়েছিল ঠিক সেই সময়েই।",
- 94:"কষ্টের সাথেই স্বস্তি আছে। দুইবার বলা হয়েছে এখানে।",
- 97:"লাইলাতুল কদর, হাজার মাসের চেয়ে উত্তম এক রাত।",
- 103:"সময়ের কসম। মানুষ ক্ষতির মধ্যে আছে, ব্যতিক্রম চারটি জিনিস।",
- 105:"হাতির বাহিনী আর আবাবিল পাখির ঘটনা।",
- 108:"কোরআনের সবচেয়ে ছোট সূরা, মাত্র তিন আয়াত।",
- 112:"এক তৃতীয়াংশ কোরআনের সমান বলা হয়েছে এই সূরাকে।",
- 113:"আশ্রয় চাওয়ার সূরা। ঘুমের আগে আর সকাল-সন্ধ্যায়।",
- 114:"কোরআনের শেষ সূরা। মানুষের রব, মানুষের বাদশাহর কাছে আশ্রয়।",
-}
-
-# Honest generic frames for the rest. Keyed by surah number so the same frame
-# never lands two days running.
-FRAME_MAKKI = [
- "মক্কায় নাজিল হওয়া সূরা, {n} আয়াত।",
- "{n} আয়াতের মক্কি সূরা। বসে একবার পুরোটা শুনে নিন।",
- "মক্কি সূরা, {n} আয়াত। তিলাওয়াতের সাথে অর্থটাও চোখের সামনে থাকে।",
-]
-FRAME_MADANI = [
- "মদিনায় নাজিল হওয়া সূরা, {n} আয়াত।",
- "{n} আয়াতের মাদানি সূরা। বসে একবার পুরোটা শুনে নিন।",
- "মাদানি সূরা, {n} আয়াত। তিলাওয়াতের সাথে অর্থটাও চোখের সামনে থাকে।",
-]
-
-TAIL = ("তিলাওয়াতে ইয়াসির আল-দোসারি, সাথে ইংরেজি অনুবাদ।\n"
-        "পুরো কোরআন, ১১৪ সূরা, একটি প্লেলিস্টে: https://www.youtube.com/playlist?list={pl}")
-
 
 def bn_num(x):
     """Bangla digits. A Bangla caption never carries ASCII numerals."""
     return str(x).translate(str.maketrans("0123456789", "০১২৩৪৫৬৭৮৯"))
 
 
-def message(n, ch, playlist):
-    note = NOTE.get(n)
-    if not note:
-        frames = FRAME_MAKKI if ch["revelation_place"] == "makkah" else FRAME_MADANI
-        note = frames[n % len(frames)].format(n=bn_num(ch["verses_count"]))
-    return f"সূরা {BN[n]}।\n{note}\n\n" + TAIL.format(pl=playlist)
+def message(n, playlist):
+    hook, body = CAPTIONS[n]
+    return (f"{hook}\n{body}\n\n"
+            f"সূরা {BN[n]}। তিলাওয়াতে ইয়াসির আল-দোসারি, ইংরেজি অনুবাদসহ। কোরআন সিরিজ {bn_num(n)} / ১১৪।\n"
+            f"পুরো কোরআন এক প্লেলিস্টে: https://www.youtube.com/playlist?list={playlist}")
 
 
 def main():
@@ -108,7 +73,6 @@ def main():
     a = ap.parse_args()
 
     led = json.load(open(LEDGER))
-    chapters = {c["id"]: c for c in json.load(open(CHAPTERS))}
     playlist = led["_playlist"]
     d0 = datetime.date.fromisoformat(a.start)
 
@@ -125,7 +89,7 @@ def main():
         out.append({
             "slug": f"surah-{n:03d}",
             "iso": when.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "message": message(n, chapters[n], playlist),
+            "message": message(n, playlist),
             "link": f"https://www.youtube.com/watch?v={e['id']}",
         })
 
