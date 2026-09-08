@@ -1,0 +1,37 @@
+name: Wasilah replace one surah post (manual)
+
+# Destructive. Deletes an already-published surah post and posts it again, the
+# only way to change the link card on a live post. Never on a schedule.
+on:
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: surah slug, e.g. surah-001
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wasilah-publisher
+  cancel-in-progress: false
+
+jobs:
+  repost:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - env:
+          META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+          SLUG: ${{ inputs.slug }}
+        run: python3 repost_surah.py
+      - name: Commit state
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add posted_surahs.json
+          git add surahs_synced.json
+          git diff --staged --quiet || git commit -m "state: replaced a surah post [skip ci]"
+          git push
