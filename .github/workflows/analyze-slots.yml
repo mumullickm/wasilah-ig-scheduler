@@ -1,0 +1,25 @@
+name: Wasilah slot analysis (manual)
+
+# Manual only. Reads the Page's published history and reports performance by
+# Dhaka hour, so posting slots are chosen from this Page's own data.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Analyze slots
+        env:
+          META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+        run: python3 analyze_slots.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: slot-data
+          path: slot_data.json
