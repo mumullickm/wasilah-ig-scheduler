@@ -21,13 +21,14 @@ from surah_captions import CAPTIONS
 LEDGER = os.path.expanduser("~/Developer/wasilah-quran-video/state/uploaded.json")
 OUT = "surahs.json"
 
-# 09:00 Dhaka. Chosen from this Page's own 159-post history (analyze_slots.py):
-# the 08:00 and 09:00 buckets carry the highest median engagement, the evening
-# block from 21:00 is already triple-booked by statics, reels and carousels,
-# and 23:00 to 01:00 is the worst hour on the Page. Post-level reach is not
-# measurable, Graph v21 retired the whole post_impressions family, so this is
-# ranked on public engagement counts and it is a weak signal, not a strong one.
-HOUR_UTC = 3
+# 20:00 Dhaka. Miraz's call, 2026-09-08, over the 09:00 the data pointed at.
+# It is the one free hour left in his evening window: 21:00, 21:30, 21:45,
+# 22:00 and 22:30 BD are taken every day by statics, reels and carousels, and
+# 20:00 has never been used on this Page. The engagement data that argued for
+# the morning was weak anyway (medians of 3 against 2, on counts of 0 to 7,
+# with post-level reach not measurable at all in Graph v21). See
+# analyze_slots.py.
+HOUR_UTC = 14
 
 BN = {
  1:"আল-ফাতিহা",2:"আল-বাকারা",3:"আলে ইমরান",4:"আন-নিসা",5:"আল-মায়িদা",6:"আল-আনআম",

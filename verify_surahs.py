@@ -36,11 +36,18 @@ def main():
         w = want[slug]
         msg_ok = r.get("message") == w["message"]
         t = r.get("scheduled_publish_time")
-        when_ok = (t is not None and
-                   datetime.datetime.fromtimestamp(int(t), datetime.timezone.utc)
-                   == datetime.datetime.fromisoformat(w["iso"].replace("Z", "+00:00")))
+        # A post that has already gone out has no scheduled_publish_time left,
+        # so for those the caption is the whole check.
+        if r.get("is_published"):
+            when_ok = True
+        else:
+            when_ok = (t is not None and
+                       datetime.datetime.fromtimestamp(int(t), datetime.timezone.utc)
+                       == datetime.datetime.fromisoformat(w["iso"].replace("Z", "+00:00")))
         local = (datetime.datetime.fromtimestamp(int(t), BD).strftime("%Y-%m-%d %H:%M BD")
-                 if t else "published")
+                 if t else datetime.datetime.fromisoformat(
+                     r.get("created_time", "").replace("+0000", "+00:00")
+                 ).astimezone(BD).strftime("%Y-%m-%d %H:%M BD, live"))
         flag = "ok " if (msg_ok and when_ok) else "BAD"
         if flag == "BAD":
             bad += 1

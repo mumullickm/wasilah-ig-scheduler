@@ -95,8 +95,21 @@ def main():
             continue
         when = datetime.datetime.fromisoformat(s["iso"].replace("Z", "+00:00"))
         if when <= now + MIN_LEAD:
-            print(f"[{stamp}] {s['slug']} changed but is already due or published, left alone")
-            sync[s["slug"]] = fp
+            # The queue moved this post to now or into the past. Leaving it
+            # would strand a post in Facebook's scheduler at a time the queue
+            # no longer believes in, so push the caption and publish it.
+            cur = _get(pid, {"fields": "is_published"})
+            if cur.get("is_published") is False:
+                _post(pid, {"message": s["message"]})
+                r = _post(pid, {"is_published": "true"})
+                ok = "_error" not in r
+                print(f"[{stamp}] FB {s['slug']}: "
+                      + ("published now" if ok else f"publish-now failed {r.get('_error')}"))
+                if ok:
+                    sync[s["slug"]] = fp
+            else:
+                print(f"[{stamp}] {s['slug']} is already published, left alone")
+                sync[s["slug"]] = fp
             continue
         ok, info = edit_scheduled(pid, s, when)
         print(f"[{stamp}] FB {s['slug']}: {info}")
