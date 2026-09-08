@@ -6,6 +6,10 @@ on:
       post_id:
         description: Facebook post id
         required: true
+      rescrape:
+        description: also force Facebook to refetch every unpublished surah link
+        required: false
+        default: "false"
 
 permissions:
   contents: read
@@ -21,3 +25,7 @@ jobs:
           META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
           POST_ID: ${{ inputs.post_id }}
         run: python3 inspect_post.py
+      - if: ${{ inputs.rescrape == 'true' }}
+        env:
+          META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+        run: python3 rescrape.py
