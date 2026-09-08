@@ -1,0 +1,23 @@
+name: Wasilah inspect a post (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      post_id:
+        description: Facebook post id
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - env:
+          META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+          POST_ID: ${{ inputs.post_id }}
+        run: python3 inspect_post.py
