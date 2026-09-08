@@ -68,8 +68,12 @@ def main():
     print("probing insight metrics on", batch[0][2])
     allowed = probe(batch[0][2])
     print("allowed metrics:", allowed)
-    reach_metric = ("post_impressions_unique" if "post_impressions_unique" in allowed
-                    else ("post_impressions" if "post_impressions" in allowed else None))
+    # v21 retired the whole post_impressions family. post_clicks survives and is
+    # the better metric for this series anyway: these are link posts and the
+    # click is the action that matters.
+    reach_metric = next((m for m in ("post_impressions_unique", "post_impressions",
+                                     "post_clicks") if m in allowed), None)
+    print("using metric:", reach_metric)
 
     for i in range(0, len(batch), 25):
         chunk = batch[i:i + 25]
@@ -102,7 +106,7 @@ def main():
     json.dump(rows, open("slot_data.json", "w"), indent=1)
 
     have_reach = [r for r in rows if r["reach"] is not None]
-    print(f"\nposts with reach: {len(have_reach)} of {len(rows)}")
+    print(f"\nposts with {reach_metric}: {len(have_reach)} of {len(rows)}")
 
     def table(key, sel):
         by = {}
