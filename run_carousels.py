@@ -73,8 +73,8 @@ def child(ig, slide, kind):
 
 
 def wait_ready(cid):
-    """Video children transcode asynchronously; a parent referencing an
-    unfinished child is rejected, so block until FINISHED or give up loudly."""
+    """Containers process asynchronously (images too, error 9007 otherwise);
+    block until FINISHED or give up loudly."""
     deadline = time.time() + MAX_CHILD_WAIT
     while time.time() < deadline:
         st = _get(cid, {"fields": "status_code"}).get("status_code")
@@ -91,14 +91,12 @@ def publish(ig, car, caption):
     for slide in car["slides"]:
         cid = child(ig, slide, car["kind"])
         kids.append(cid)
-    if car["kind"] == "video":
-        for cid in kids:
-            wait_ready(cid)
+    for cid in kids:
+        wait_ready(cid)
     parent = _post(f"{ig}/media", {"media_type": "CAROUSEL",
                                    "children": ",".join(kids),
                                    "caption": caption})["id"]
-    if car["kind"] == "video":
-        wait_ready(parent)
+    wait_ready(parent)
     return _post(f"{ig}/media_publish", {"creation_id": parent})["id"]
 
 
