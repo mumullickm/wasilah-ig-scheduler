@@ -692,7 +692,7 @@
   "iso": "2026-12-12T15:00:00Z"
  },
  {
-  "reel": "b4-doa-11-sofor",
+  "reel": "b4-doa-17-khabar",
   "iso": "2026-12-13T15:00:00Z"
  },
  {
@@ -700,11 +700,11 @@
   "iso": "2026-12-14T15:00:00Z"
  },
  {
-  "reel": "b4-doa-26-rag",
+  "reel": "b4-wudu-beard",
   "iso": "2026-12-15T15:00:00Z"
  },
  {
-  "reel": "b4-wudu-beard",
+  "reel": "b4-doa-11-sofor",
   "iso": "2026-12-16T15:00:00Z"
  },
  {
@@ -712,11 +712,11 @@
   "iso": "2026-12-17T15:00:00Z"
  },
  {
-  "reel": "b4-doa-01-rizq",
+  "reel": "b4-q-25-63",
   "iso": "2026-12-18T15:00:00Z"
  },
  {
-  "reel": "b4-q-25-63",
+  "reel": "b4-doa-26-rag",
   "iso": "2026-12-19T15:00:00Z"
  },
  {
@@ -724,11 +724,11 @@
   "iso": "2026-12-20T15:00:00Z"
  },
  {
-  "reel": "b4-doa-04-rin",
+  "reel": "b4-wudu-breaks-1",
   "iso": "2026-12-21T15:00:00Z"
  },
  {
-  "reel": "b4-wudu-breaks-1",
+  "reel": "b4-doa-01-rizq",
   "iso": "2026-12-22T15:00:00Z"
  },
  {
@@ -740,19 +740,19 @@
   "iso": "2026-12-24T15:00:00Z"
  },
  {
-  "reel": "b4-doa-30-mrittu",
+  "reel": "b4-doa-04-rin",
   "iso": "2026-12-25T15:00:00Z"
  },
  {
-  "reel": "b4-doa-06-rog",
+  "reel": "b4-wudu-breaks-2",
   "iso": "2026-12-26T15:00:00Z"
  },
  {
-  "reel": "b4-wudu-breaks-2",
+  "reel": "b4-q-28-24",
   "iso": "2026-12-27T15:00:00Z"
  },
  {
-  "reel": "b4-q-28-24",
+  "reel": "b4-doa-30-mrittu",
   "iso": "2026-12-28T15:00:00Z"
  },
  {
@@ -760,7 +760,7 @@
   "iso": "2026-12-29T15:00:00Z"
  },
  {
-  "reel": "b4-doa-08-dampotto",
+  "reel": "b4-doa-06-rog",
   "iso": "2026-12-30T15:00:00Z"
  },
  {
@@ -768,15 +768,15 @@
   "iso": "2026-12-31T15:00:00Z"
  },
  {
-  "reel": "b4-doa-27-namajer-por",
+  "reel": "b4-salah-sahw",
   "iso": "2027-01-01T15:00:00Z"
  },
  {
-  "reel": "b4-salah-sahw",
+  "reel": "b4-doa-08-dampotto",
   "iso": "2027-01-02T15:00:00Z"
  },
  {
-  "reel": "b4-doa-28-mosjid",
+  "reel": "b4-q-29-69",
   "iso": "2027-01-03T15:00:00Z"
  },
  {
@@ -784,11 +784,11 @@
   "iso": "2027-01-04T15:00:00Z"
  },
  {
-  "reel": "b4-q-29-69",
+  "reel": "b4-doa-27-namajer-por",
   "iso": "2027-01-05T15:00:00Z"
  },
  {
-  "reel": "b4-doa-23-shukria",
+  "reel": "b4-salah-witr",
   "iso": "2027-01-06T15:00:00Z"
  },
  {
@@ -796,7 +796,7 @@
   "iso": "2027-01-07T15:00:00Z"
  },
  {
-  "reel": "b4-salah-witr",
+  "reel": "b4-doa-28-mosjid",
   "iso": "2027-01-08T15:00:00Z"
  },
  {
@@ -808,23 +808,23 @@
   "iso": "2027-01-10T15:00:00Z"
  },
  {
-  "reel": "b4-doa-25-hidayat",
+  "reel": "b4-doa-23-shukria",
   "iso": "2027-01-11T15:00:00Z"
  },
  {
-  "reel": "b4-doa-16-ghor",
+  "reel": "b4-salah-qirat",
   "iso": "2027-01-12T15:00:00Z"
  },
  {
-  "reel": "b4-salah-qirat",
+  "reel": "b4-q-2-195",
   "iso": "2027-01-13T15:00:00Z"
  },
  {
-  "reel": "b4-q-2-195",
+  "reel": "b4-v06-jumuah",
   "iso": "2027-01-14T15:00:00Z"
  },
  {
-  "reel": "b4-doa-29-basor",
+  "reel": "b4-doa-25-hidayat",
   "iso": "2027-01-15T15:00:00Z"
  }
 ]
