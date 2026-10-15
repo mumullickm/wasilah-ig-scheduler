@@ -38,7 +38,12 @@ def asset_id(rid):
     return m.group(1) if m else rid
 
 
-def video_url(reel): return f"{VIDEO_BASE}/{asset_id(reel)}.mp4"
+def video_url(reel):
+    # Batch 4 onward lives on wasilah-media: the original hosts are near the 1 GB Pages cap.
+    aid = asset_id(reel)
+    if aid.startswith("b4-") and CFG.get("batch4Base"):
+        return f"{CFG['batch4Base']}/{aid}.mp4"
+    return f"{VIDEO_BASE}/{aid}.mp4"
 
 
 def publish_ig_reel(ig, reel):
