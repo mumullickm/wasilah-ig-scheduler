@@ -1,0 +1,20 @@
+name: Wasilah list Instagram posts (manual, read-only)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - env:
+          META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+        run: python3 list_ig_media.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ig-media
+          path: ig_media.json
+          retention-days: 3
