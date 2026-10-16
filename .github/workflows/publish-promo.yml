@@ -1,0 +1,60 @@
+name: Wasilah promo publish (manual)
+
+# One-off promo: IG Reel + Story, FB Reel + Story, YouTube Short.
+# Manual dispatch only. posted_promo.json makes re-runs skip what already went out.
+on:
+  workflow_dispatch:
+    inputs:
+      targets:
+        description: "Comma list: ig_reel,ig_story,fb_reel,fb_story,youtube"
+        default: "ig_reel,ig_story,fb_reel,fb_story,youtube"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wasilah-publisher
+  cancel-in-progress: false
+
+jobs:
+  publish-promo:
+    runs-on: ubuntu-latest
+    steps:
+      # `ref: main` resolves the branch at checkout time. A bare checkout pins
+      # to the SHA from when the run was created, so a ledger commit landing in
+      # between is invisible and the publisher re-posts what it already sent.
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Publish promo
+        env:
+          META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          PROMO_TARGETS: ${{ inputs.targets }}
+        run: python3 run_promo.py
+      - name: Commit updated state
+        if: always()
+        run: |
+          git config user.name "wasilah-bot"
+          git config user.email "wasilah-bot@users.noreply.github.com"
+          # Commit BEFORE rebasing. `git pull --rebase` refuses to run against a
+          # dirty tree, and the publisher has just written the ledger, so the
+          # pull failed on every run and `|| true` swallowed it. The rebase is
+          # what lets this land when a sibling publisher pushed after checkout.
+          git add posted_promo.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "no state change"
+            exit 0
+          fi
+          git commit -m "state: update posted promo [skip ci]"
+          # The post already went out. An unrecorded ledger makes the next run
+          # publish the same reel again, so retry rather than drop it.
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && exit 0
+            echo "ledger push attempt $i failed, retrying"
+            sleep 5
+          done
+          echo "ledger push failed after 3 attempts; posted_promo.json is NOT saved" >&2
+          exit 1
