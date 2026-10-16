@@ -34,6 +34,9 @@ jobs:
           META_PAGE_TOKEN: ${{ secrets.META_PAGE_TOKEN }}
         run: python3 run_carousels.py
       - name: Commit updated state
+        # always(): a carousel that fails must not stop the ones that DID publish
+        # from being recorded, or the next run publishes them again (277 duplicates, Sep to Oct 2026).
+        if: always()
         run: |
           git config user.name "wasilah-bot"
           git config user.email "wasilah-bot@users.noreply.github.com"

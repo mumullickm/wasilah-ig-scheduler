@@ -109,7 +109,8 @@ def main():
 
     due = [c for c in cars
            if c["iso"] <= now.strftime("%Y-%m-%dT%H:%M:%SZ")
-           and not state.get(c["carousel"], {}).get("ig")]
+           and not state.get(c["carousel"], {}).get("ig")
+           and not state.get(c["carousel"], {}).get("retired")]
     if not due:
         print(f"[{stamp}] no carousels due")
         return
